@@ -62,12 +62,17 @@ public class AdminCategoryService {
     }
 
     @Transactional
-    public Void delete(Long adminId, Long categoryId) {
+    public CategoryDetailResponse delete(Long adminId, Long categoryId) {
 
         validateAdmin(adminId);
 
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
+                () -> new BaseException(ErrorEnum.CATEGORY_NOT_FOUND)
+        );
 
+        category.delete();
 
+        return CategoryDetailResponse.from(category);
     }
 
 }

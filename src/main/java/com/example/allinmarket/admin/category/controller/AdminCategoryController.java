@@ -54,4 +54,12 @@ public class AdminCategoryController {
         ));
     }
 
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<ApiResponse<CategoryDetailResponse>> delete(
+            @PathVariable Long categoryId
+    ) {
+        Long adminId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.DELETE_SUCCESS, adminCategoryService.delete(adminId, categoryId)));
+    }
+
 }
