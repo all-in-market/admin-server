@@ -37,7 +37,7 @@ public class AdminRefundService {
 
         validationForbidden(adminId);
 
-        Refund refund = refundRepository.findByIdAndStatusPending(refundId).orElseThrow(
+        Refund refund = refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
@@ -50,7 +50,7 @@ public class AdminRefundService {
 
         validationForbidden(adminId);
 
-        Refund refund = refundRepository.findByIdAndStatusPending(refundId).orElseThrow(
+        Refund refund = refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
