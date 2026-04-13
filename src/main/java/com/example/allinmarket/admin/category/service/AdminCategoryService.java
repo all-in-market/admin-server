@@ -58,6 +58,8 @@ public class AdminCategoryService {
 
         category.updateName(request.name());
         category.updateSortOrder(request.sortOrder());
+
+        return CategoryDetailResponse.from(category);
     }
 
     @Transactional
