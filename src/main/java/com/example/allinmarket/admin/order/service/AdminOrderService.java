@@ -1,7 +1,11 @@
 package com.example.allinmarket.admin.order.service;
 
+import com.example.allinmarket.admin.order.dto.request.AdminOrderUpdateStatusRequest;
 import com.example.allinmarket.buyer.order.dto.response.OrderDetailResponse;
+import com.example.allinmarket.common.enums.ErrorEnum;
+import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
+import com.example.allinmarket.domain.order.entity.Order;
 import com.example.allinmarket.domain.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -20,5 +24,16 @@ public class AdminOrderService {
                 orderRepository.findAllBy(pageable)
                         .map(OrderDetailResponse::from)
         );
+    }
+
+    @Transactional
+    public OrderDetailResponse updateStaus(Long orderId, AdminOrderUpdateStatusRequest request) {
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new BaseException(ErrorEnum.ORDER_NOT_FOUND)
+        );
+
+        order.updateStatus(request.status());
+
+        return OrderDetailResponse.from(order);
     }
 }

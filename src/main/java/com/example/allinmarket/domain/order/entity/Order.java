@@ -60,4 +60,8 @@ public class Order extends ModifiableEntity {
         order.address = address;
         return order;
     }
+
+    public void updateStatus(OrderStatus status) {
+        this.status = status;
+    }
 }
