@@ -1,9 +1,11 @@
 package com.example.allinmarket.admin.seller.service;
 
 import com.example.allinmarket.admin.repository.AdminRepository;
+import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
+import com.example.allinmarket.seller.entity.Seller;
 import com.example.allinmarket.seller.enums.SellerStatus;
 import com.example.allinmarket.seller.me.dto.response.SellerDetailResponse;
 import com.example.allinmarket.seller.repository.SellerRepository;
@@ -35,5 +37,20 @@ public class AdminSellerService {
                 sellerRepository.findAllByStatusAndDeletedAtIsNull(status, pageable)
                         .map(SellerDetailResponse::from)
         );
+    }
+
+    @Transactional
+    public SellerDetailResponse updateSellerStatus(Long currentUserId, Long sellerId, SellerStatusUpdateRequest request) {
+        if (!adminRepository.existsByIdAndDeletedAtIsNull(currentUserId)) {
+            throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
+        }
+
+        Seller seller = sellerRepository.findByIdAndDeletedAtIsNull(sellerId).orElseThrow(
+                () -> new BaseException(ErrorEnum.SELLER_NOT_FOUND)
+        );
+
+        seller.updateStatus(request.status());
+
+        return SellerDetailResponse.from(seller);
     }
 }
