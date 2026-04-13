@@ -1,6 +1,7 @@
 package com.example.allinmarket.admin.category.controller;
 
 import com.example.allinmarket.admin.category.dto.CategoryCreateRequest;
+import com.example.allinmarket.admin.category.dto.CategoryUpdateRequest;
 import com.example.allinmarket.admin.category.service.AdminCategoryService;
 import com.example.allinmarket.buyer.category.dto.CategoryDetailResponse;
 import com.example.allinmarket.common.enums.SuccessEnum;
@@ -40,4 +41,17 @@ public class AdminCategoryController {
                         adminCategoryService.create(adminId, request)
                 ));
     }
+
+    @PutMapping("/{categoryId}")
+    public ResponseEntity<ApiResponse<CategoryDetailResponse>> update(
+            @PathVariable Long categoryId,
+            @Valid @RequestBody CategoryUpdateRequest request
+    ) {
+        Long adminId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessEnum.UPDATE_SUCCESS,
+                adminCategoryService.update(adminId, categoryId, request)
+        ));
+    }
+
 }
