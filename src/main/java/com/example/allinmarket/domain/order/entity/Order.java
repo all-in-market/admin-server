@@ -64,14 +64,9 @@ public class Order extends ModifiableEntity {
     }
 
     public void updateStatus(OrderStatus status) {
-        if(isUnmodifiable()) {
+        if(!this.status.canTransitToTargetStatus(status)) {
             throw new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE);
         }
         this.status = status;
-    }
-
-    private boolean isUnmodifiable() {
-        return this.status == OrderStatus.REFUNDED
-                || this.status == OrderStatus.FAILED;
     }
 }
