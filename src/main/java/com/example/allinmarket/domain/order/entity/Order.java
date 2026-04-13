@@ -2,6 +2,8 @@ package com.example.allinmarket.domain.order.entity;
 
 import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.common.entity.ModifiableEntity;
+import com.example.allinmarket.common.enums.ErrorEnum;
+import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.domain.order.enums.OrderStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -59,5 +61,17 @@ public class Order extends ModifiableEntity {
         order.phone = phone;
         order.address = address;
         return order;
+    }
+
+    public void updateStatus(OrderStatus status) {
+        if(isUnmodifiable()) {
+            throw new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE);
+        }
+        this.status = status;
+    }
+
+    private boolean isUnmodifiable() {
+        return this.status == OrderStatus.REFUNDED
+                || this.status == OrderStatus.FAILED;
     }
 }

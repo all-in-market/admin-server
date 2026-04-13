@@ -21,6 +21,7 @@ public enum ErrorEnum {
     ORDER_NOT_FOUND(404, "존재하지 않는 주문입니다."),
     ORDER_ALREADY_COMPLETED(400, "이미 결제 완료된 주문입니다."),
     ORDER_NOT_CANCELLABLE(400, "취소할 수 없는 주문 상태입니다."),
+    ORDER_STATUS_IMMUTABLE(400, "변경할 수 없는 주문 상태입니다."),
 
     // Cart
     CART_ITEMS_EMPTY(404, "주문할 장바구니 상품이 없습니다."),
