@@ -1,6 +1,7 @@
 package com.example.allinmarket.admin.order.service;
 
 import com.example.allinmarket.admin.order.dto.request.AdminOrderUpdateStatusRequest;
+import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.buyer.order.dto.response.OrderDetailResponse;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminOrderService {
 
     private final OrderRepository orderRepository;
+    private final AdminRepository adminRepository;
 
     public PageResponse<OrderDetailResponse> findAll(Long adminId, Pageable pageable) {
 
