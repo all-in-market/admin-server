@@ -53,12 +53,11 @@ public class AdminCategoryService {
 
         validateAdmin(adminId);
 
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(categoryId)
+                .orElseThrow(() -> new BaseException(ErrorEnum.CATEGORY_NOT_FOUND));
 
-
-
-
-
-
+        category.updateName(request.name());
+        category.updateSortOrder(request.sortOrder());
     }
 
     @Transactional
@@ -74,5 +73,4 @@ public class AdminCategoryService {
 
         return CategoryDetailResponse.from(category);
     }
-
 }

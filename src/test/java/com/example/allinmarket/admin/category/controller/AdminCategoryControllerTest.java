@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,6 +19,9 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(AdminCategoryController.class)
@@ -104,5 +108,156 @@ public class AdminCategoryControllerTest {
                 .jsonPath("$.success").isEqualTo(false)
                 .jsonPath("$.status").isEqualTo(404)
                 .jsonPath("$.message").isEqualTo(ErrorEnum.ADMIN_NOT_FOUND.getMessage());
+    }
+
+    // ==================== update ====================
+
+    @Test
+    void 카테고리_수정_성공_테스트() {
+        // given
+        setAuthContext(1L);
+
+        CategoryDetailResponse response = new CategoryDetailResponse(10L, "가전제품", 2);
+
+        when(adminCategoryService.update(eq(1L), eq(10L), any())).thenReturn(response);
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "가전제품",
+                            "sortOrder": 2
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(true)
+                .jsonPath("$.status").isEqualTo(200)
+                .jsonPath("$.message").isEqualTo(SuccessEnum.UPDATE_SUCCESS.getMessage())
+                .jsonPath("$.data.id").isEqualTo(10)
+                .jsonPath("$.data.name").isEqualTo("가전제품")
+                .jsonPath("$.data.sortOrder").isEqualTo(2);
+    }
+
+    @Test
+    void 카테고리_수정_미인증_예외_테스트() {
+        // given - SecurityContext 비어있는 상태 (인증 없음)
+        SecurityContextHolder.clearContext();
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "가전제품",
+                            "sortOrder": 2
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isUnauthorized()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(401);
+    }
+
+    @Test
+    void 카테고리_수정_존재하지_않는_관리자_예외_테스트() {
+        // given
+        setAuthContext(999L);
+
+        when(adminCategoryService.update(eq(999L), eq(10L), any()))
+                .thenThrow(new BaseException(ErrorEnum.ADMIN_NOT_FOUND));
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "가전제품",
+                            "sortOrder": 2
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(404)
+                .jsonPath("$.message").isEqualTo(ErrorEnum.ADMIN_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void 카테고리_수정_존재하지_않는_카테고리_예외_테스트() {
+        // given
+        setAuthContext(1L);
+
+        when(adminCategoryService.update(eq(1L), eq(999L), any()))
+                .thenThrow(new BaseException(ErrorEnum.CATEGORY_NOT_FOUND));
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "가전제품",
+                            "sortOrder": 2
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(404)
+                .jsonPath("$.message").isEqualTo(ErrorEnum.CATEGORY_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void 카테고리_수정_이름_길이_초과_예외_테스트() {
+        // given
+        setAuthContext(1L);
+        String tooLongName = "a".repeat(51);
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "%s",
+                            "sortOrder": 2
+                        }
+                        """.formatted(tooLongName))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(400)
+                .jsonPath("$.message").isEqualTo("카테고리 이름은 50자를 초과할 수 없습니다.");
+
+        verifyNoInteractions(adminCategoryService);
+    }
+
+    @Test
+    void 카테고리_수정_sortOrder_음수_예외_테스트() {
+        // given
+        setAuthContext(1L);
+
+        // when & then
+        restTestClient.put().uri("/admin/categories/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "name": "가전제품",
+                            "sortOrder": -1
+                        }
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(400)
+                .jsonPath("$.message").isEqualTo("순서는 0 또는 양수로 지정해 주세요");
+
+        verifyNoInteractions(adminCategoryService);
     }
 }
