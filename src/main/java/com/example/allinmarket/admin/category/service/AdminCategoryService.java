@@ -53,14 +53,14 @@ public class AdminCategoryService {
 
         validateAdmin(adminId);
 
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(categoryId)
+                .orElseThrow(() -> new BaseException(ErrorEnum.CATEGORY_NOT_FOUND));
 
-
-
-
-
-
+        category.updateName(request.name());
+        category.updateSortOrder(request.sortOrder());
+        return CategoryDetailResponse.from(category);
     }
-
+// 65번 이후로 넘기지 말 것
     @Transactional
     public Void delete(Long adminId, Long categoryId) {
 

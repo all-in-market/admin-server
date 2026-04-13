@@ -31,4 +31,12 @@ public class Category extends DeletableEntity {
         category.sortOrder = sortOrder;
         return category;
     }
+
+    public void updateName (String name) {
+        this.name = name != null ? name : this.name;
+    }
+
+    public void updateSortOrder (int sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }
