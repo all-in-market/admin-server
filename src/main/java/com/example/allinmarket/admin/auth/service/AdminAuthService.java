@@ -4,16 +4,17 @@ import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
 import com.example.allinmarket.admin.auth.dto.response.AdminLoginResponse;
 import com.example.allinmarket.admin.entity.Admin;
 import com.example.allinmarket.admin.repository.AdminRepository;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AdminAuthService {
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
