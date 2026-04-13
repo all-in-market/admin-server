@@ -60,14 +60,4 @@ public class AdminCategoryService {
         category.updateSortOrder(request.sortOrder());
         return CategoryDetailResponse.from(category);
     }
-// 65번 이후로 넘기지 말 것
-    @Transactional
-    public Void delete(Long adminId, Long categoryId) {
-
-        validateAdmin(adminId);
-
-
-
-    }
-
 }
