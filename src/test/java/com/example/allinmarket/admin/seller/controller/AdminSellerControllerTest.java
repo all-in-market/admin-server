@@ -1,5 +1,6 @@
 package com.example.allinmarket.admin.seller.controller;
 
+import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.admin.seller.service.AdminSellerService;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.enums.SuccessEnum;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -98,5 +100,60 @@ public class AdminSellerControllerTest {
                 .jsonPath("$.success").isEqualTo(false)
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.message").isEqualTo(ErrorEnum.UNAUTHORIZED.getMessage());
+    }
+
+    @Test
+    @WithMockUser
+    void 판매자_상태_승인_성공_테스트() {
+        // given
+        SellerStatusUpdateRequest request = new SellerStatusUpdateRequest(SellerStatus.APPROVED);
+
+        SellerDetailResponse response = new SellerDetailResponse(
+                1L,
+                "판매자@테스트.com",
+                "판매자",
+                "010-1234-1234",
+                "상점 이름",
+                "사업자 번호",
+                "계좌 정보",
+                SellerStatus.APPROVED,
+                UserRole.SELLER
+        );
+
+        given(adminSellerService.updateSellerStatus(eq(1L), eq(1L), eq(request))).willReturn(response);
+
+        // when & then
+        restTestClient.put().uri("/admin/sellers/{sellerId}/status", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(true)
+                .jsonPath("$.status").isEqualTo(200)
+                .jsonPath("$.message").isEqualTo(SuccessEnum.UPDATE_SUCCESS.getMessage())
+                .jsonPath("$.data.id").isEqualTo(1L)
+                .jsonPath("$.data.status").isEqualTo("APPROVED");
+    }
+
+    @Test
+    @WithMockUser
+    void 판매자_상태_승인_실패_테스트() {
+        // given
+        SellerStatusUpdateRequest request = new SellerStatusUpdateRequest(SellerStatus.APPROVED);
+
+        given(adminSellerService.updateSellerStatus(eq(1L), eq(1L), eq(request)))
+                .willThrow(new BaseException(ErrorEnum.SELLER_NOT_FOUND));
+
+        // when & then
+        restTestClient.put().uri("/admin/sellers/{sellerId}/status", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.success").isEqualTo(false)
+                .jsonPath("$.status").isEqualTo(ErrorEnum.SELLER_NOT_FOUND.getStatus())
+                .jsonPath("$.message").isEqualTo(ErrorEnum.SELLER_NOT_FOUND.getMessage());
     }
 }

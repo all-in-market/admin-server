@@ -43,6 +43,5 @@ public class AdminSellerController {
                 adminSellerService.updateSellerStatus(SecurityUtils.getCurrentUserId(), sellerId, request)
                 )
         );
-
     }
 }

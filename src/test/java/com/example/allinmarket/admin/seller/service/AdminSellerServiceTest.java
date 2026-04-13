@@ -2,10 +2,12 @@ package com.example.allinmarket.admin.seller.service;
 
 import com.example.allinmarket.admin.entity.Admin;
 import com.example.allinmarket.admin.repository.AdminRepository;
+import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.seller.entity.Seller;
+import com.example.allinmarket.seller.enums.SellerStatus;
 import com.example.allinmarket.seller.me.dto.response.SellerDetailResponse;
 import com.example.allinmarket.seller.repository.SellerRepository;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -85,5 +88,73 @@ public class AdminSellerServiceTest {
 
         // when & then
         assertThrows(BaseException.class, () -> adminSellerService.findAllSeller(1L, PageRequest.of(0, 10), null));
+    }
+
+    @Test
+    void 판매자_상태_승인_성공_테스트() {
+        //given
+        Admin admin = Admin.of(
+                "관리자@테스트.com",
+                "12345678",
+                "관리자"
+        );
+
+        ReflectionTestUtils.setField(admin, "id", 1L);
+
+        Seller seller = Seller.of(
+                "판매자@테스트.com",
+                "12345678",
+                "판매자",
+                "010-1234-5678",
+                "상점 이름",
+                "사업자 번호",
+                "계좌 정보"
+        );
+
+        ReflectionTestUtils.setField(seller, "id", 1L);
+
+        SellerStatusUpdateRequest request = new SellerStatusUpdateRequest(SellerStatus.APPROVED);
+
+        given(adminRepository.existsByIdAndDeletedAtIsNull(admin.getId())).willReturn(true);
+        given(sellerRepository.findByIdAndDeletedAtIsNull(seller.getId())).willReturn(Optional.of(seller));
+
+        // when
+        SellerDetailResponse response = adminSellerService.updateSellerStatus(admin.getId(), seller.getId(), request);
+
+        // then
+        assertEquals(seller.getStatus(), response.status());
+    }
+
+    @Test
+    void 판매자_상태_승인_실패_테스트() {
+        //given
+        Admin admin = Admin.of(
+                "관리자@테스트.com",
+                "12345678",
+                "관리자"
+        );
+
+        ReflectionTestUtils.setField(admin, "id", 1L);
+
+        Seller seller = Seller.of(
+                "판매자@테스트.com",
+                "12345678",
+                "판매자",
+                "010-1234-5678",
+                "상점 이름",
+                "사업자 번호",
+                "계좌 정보"
+        );
+
+        ReflectionTestUtils.setField(seller, "id", 1L);
+
+        SellerStatusUpdateRequest request = new SellerStatusUpdateRequest(SellerStatus.APPROVED);
+
+        given(adminRepository.existsByIdAndDeletedAtIsNull(admin.getId())).willReturn(true);
+        given(sellerRepository.findByIdAndDeletedAtIsNull(2L)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(BaseException.class,
+                () -> adminSellerService.updateSellerStatus(admin.getId(), 2L, request));
     }
 }
