@@ -236,20 +236,10 @@ class AdminOrderServiceTest {
         given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
 
         Order order = mock(Order.class);
-        Buyer buyer = mock(Buyer.class);
-        given(buyer.getId()).willReturn(1L);
-        given(order.getId()).willReturn(orderId);
-        given(order.getBuyer()).willReturn(buyer);
-        given(order.getTotalAmount()).willReturn(BigDecimal.valueOf(30000));
-        given(order.getTrackingNumber()).willReturn("TRACK123");
-        given(order.getRecipient()).willReturn("홍길동");
-        given(order.getAddress()).willReturn("서울시 강남구");
-
         AdminOrderUpdateStatusRequest request = new AdminOrderUpdateStatusRequest(OrderStatus.PAID);
 
         given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
 
-        // updateStatus 호출 시 예외 발생하도록 설정
         org.mockito.Mockito.doThrow(new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE))
                 .when(order).updateStatus(OrderStatus.PAID);
 
