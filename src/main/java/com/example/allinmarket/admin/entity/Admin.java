@@ -1,7 +1,7 @@
 package com.example.allinmarket.admin.entity;
 
-import com.example.allinmarket.admin.enums.AdminRole;
 import com.example.allinmarket.common.entity.DeletableEntity;
+import com.example.allinmarket.common.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
@@ -31,14 +31,14 @@ public class Admin extends DeletableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private AdminRole role = AdminRole.ADMIN;
+    private UserRole role = UserRole.ADMIN;
 
     public static Admin of(String email, String password, String name) {
         Admin admin = new Admin();
         admin.email = email;
         admin.password = password;
         admin.name = name;
-        admin.role = AdminRole.ADMIN;
+        admin.role = UserRole.ADMIN;
         return admin;
     }
 }
