@@ -1,5 +1,6 @@
 package com.example.allinmarket.admin.seller.controller;
 
+import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.admin.seller.service.AdminSellerService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
@@ -12,10 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,10 +25,22 @@ public class AdminSellerController {
     public ResponseEntity<ApiResponse<PageResponse<SellerDetailResponse>>> findAllSeller(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false)SellerStatus status
-            ) {
+    ) {
         return ResponseEntity.ok(ApiResponse.success(
                 SuccessEnum.READ_SUCCESS,
                 adminSellerService.findAllSeller(SecurityUtils.getCurrentUserId(), pageable, status)
+                )
+        );
+    }
+
+    @PutMapping("/{sellerId}/status")
+    public ResponseEntity<ApiResponse<SellerDetailResponse>> updateSellerStatus(
+            @PathVariable Long sellerId,
+            @RequestBody SellerStatusUpdateRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessEnum.UPDATE_SUCCESS,
+                adminSellerService.updateSellerStatus(SecurityUtils.getCurrentUserId(), sellerId, request)
                 )
         );
     }

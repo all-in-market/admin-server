@@ -1,5 +1,6 @@
 package com.example.allinmarket.seller.entity;
 
+import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.common.entity.DeletableEntity;
 import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.seller.enums.SellerStatus;
@@ -103,5 +104,9 @@ public class Seller extends DeletableEntity {
 
     public void updateBankAccount(String bankAccount) {
         this.bankAccount = bankAccount;
+    }
+
+    public void updateStatus(SellerStatus status) {
+        this.status = status;
     }
 }
