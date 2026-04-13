@@ -56,6 +56,9 @@ public enum ErrorEnum {
     SELLER_NOT_FOUND(404, "존재하지 않는 판매자입니다."),
     SELLER_ALREADY_DELETED(400, "이미 탈퇴한 판매자입니다."),
 
+    // ADMIN
+    ADMIN_NOT_FOUND(404, "존재하지 않는 관리자입니다."),
+    ADMIN_ALREADY_DELETED(400, "이미 탈퇴한 관리자입니다."),
 
     // Token
     TOKEN_EXPIRED(401, "만료된 토큰입니다."),
