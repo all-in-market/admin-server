@@ -185,7 +185,7 @@ class AdminOrderControllerTest {
         setAuth();
 
         when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
-                .thenThrow(new BaseException(ErrorEnum.ORDER_STATUS_CANNOT_BE_CHANGED));
+                .thenThrow(new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE));
 
         String requestBody = """
                 {

@@ -65,7 +65,7 @@ public class Order extends ModifiableEntity {
 
     public void updateStatus(OrderStatus status) {
         if(isUnmodifiable()) {
-            throw new BaseException(ErrorEnum.ORDER_STATUS_CANNOT_BE_CHANGED);
+            throw new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE);
         }
         this.status = status;
     }

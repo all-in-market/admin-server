@@ -250,7 +250,7 @@ class AdminOrderServiceTest {
         given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
 
         // updateStatus 호출 시 예외 발생하도록 설정
-        org.mockito.Mockito.doThrow(new BaseException(ErrorEnum.ORDER_STATUS_CANNOT_BE_CHANGED))
+        org.mockito.Mockito.doThrow(new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE))
                 .when(order).updateStatus(OrderStatus.PAID);
 
         // when & then
@@ -258,6 +258,6 @@ class AdminOrderServiceTest {
                 BaseException.class,
                 () -> adminOrderService.updateStaus(adminId, orderId, request)
         );
-        assertEquals(ErrorEnum.ORDER_STATUS_CANNOT_BE_CHANGED, exception.getErrorEnum());
+        assertEquals(ErrorEnum.ORDER_STATUS_IMMUTABLE, exception.getErrorEnum());
     }
 }
