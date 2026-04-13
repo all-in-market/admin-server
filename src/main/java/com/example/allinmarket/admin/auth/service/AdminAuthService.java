@@ -21,11 +21,11 @@ public class AdminAuthService {
 
     public AdminLoginResponse login(AdminLoginRequest request) {
         Admin admin = adminRepository.findByEmail(request.email()).orElseThrow(
-                () -> new BaseException(ErrorEnum.BUYER_NOT_FOUND)
+                () -> new BaseException(ErrorEnum.ADMIN_NOT_FOUND)
         );
 
         if (admin.getDeletedAt() != null) {
-            throw new BaseException(ErrorEnum.BUYER_ALREADY_DELETED);
+            throw new BaseException(ErrorEnum.ADMIN_ALREADY_DELETED);
         }
 
         if (!passwordEncoder.matches(request.password(), admin.getPassword())) {
