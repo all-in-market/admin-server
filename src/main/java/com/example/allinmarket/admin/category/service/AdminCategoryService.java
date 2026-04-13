@@ -1,6 +1,7 @@
 package com.example.allinmarket.admin.category.service;
 
 import com.example.allinmarket.admin.category.dto.CategoryCreateRequest;
+import com.example.allinmarket.admin.category.dto.CategoryUpdateRequest;
 import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.buyer.category.dto.CategoryDetailResponse;
 import com.example.allinmarket.common.enums.ErrorEnum;
@@ -21,26 +22,52 @@ public class AdminCategoryService {
     private final AdminRepository adminRepository;
     private final CategoryRepository categoryRepository;
 
-    public List<CategoryDetailResponse> getCategories(Long adminId) {
-
+    private void validateAdmin(Long adminId) {
         if (!adminRepository.existsByIdAndDeletedAtIsNull(adminId)) {
             throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
         }
+    }
+
+    public List<CategoryDetailResponse> getCategories(Long adminId) {
+
+        validateAdmin(adminId);
 
         return categoryRepository.findAllByDeletedAtIsNull().stream()
                 .map(CategoryDetailResponse::from)
                 .toList();
     }
 
+    @Transactional
     public CategoryDetailResponse create(Long adminId, CategoryCreateRequest request) {
 
-        if (!adminRepository.existsByIdAndDeletedAtIsNull(adminId)) {
-            throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
-        }
+        validateAdmin(adminId);
 
         Category createdCategory = Category.of(request.name(), request.sortOrder());
         categoryRepository.save(createdCategory);
 
         return CategoryDetailResponse.from(createdCategory);
     }
+
+    @Transactional
+    public CategoryDetailResponse update(Long adminId, Long categoryId, CategoryUpdateRequest request) {
+
+        validateAdmin(adminId);
+
+
+
+
+
+
+
+    }
+
+    @Transactional
+    public Void delete(Long adminId, Long categoryId) {
+
+        validateAdmin(adminId);
+
+
+
+    }
+
 }
