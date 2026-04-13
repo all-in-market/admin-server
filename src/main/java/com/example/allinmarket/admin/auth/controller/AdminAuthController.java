@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminAuthController {
     private final AdminAuthService adminAuthService;
 
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<ApiResponse<AdminLoginResponse>> login(@Valid @RequestBody AdminLoginRequest request) {
         AdminLoginResponse response = adminAuthService.login(request);
         String token = response.accessToken();
