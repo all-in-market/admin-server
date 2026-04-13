@@ -58,6 +58,19 @@ public class AdminCategoryService {
 
         category.updateName(request.name());
         category.updateSortOrder(request.sortOrder());
+    }
+
+    @Transactional
+    public CategoryDetailResponse delete(Long adminId, Long categoryId) {
+
+        validateAdmin(adminId);
+
+        Category category = categoryRepository.findByIdAndDeletedAtIsNull(categoryId).orElseThrow(
+                () -> new BaseException(ErrorEnum.CATEGORY_NOT_FOUND)
+        );
+
+        category.delete();
+
         return CategoryDetailResponse.from(category);
     }
 }
