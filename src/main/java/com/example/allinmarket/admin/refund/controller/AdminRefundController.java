@@ -1,13 +1,14 @@
 package com.example.allinmarket.admin.refund.controller;
 
-import com.example.allinmarket.admin.refund.dto.request.AuthorizeRefundRequest;import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
+import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
+import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.common.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.shaded.com.google.protobuf.Api;import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +29,26 @@ public class AdminRefundController {
         return ResponseEntity.ok(ApiResponse.success(SuccessEnum.READ_SUCCESS, adminRefundService.findAll(adminId, pageable)));
     }
 
-    @PutMapping
-    public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> authorizeRefund(
+    @PutMapping("/{refundId}/deny")
+    public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> deny(
             @PathVariable Long refundId,
-            @RequestBody AuthorizeRefundRequest request
+            @RequestBody DenyRefundRequest request
     ) {
         Long adminId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.success(
                 SuccessEnum.UPDATE_SUCCESS,
-                adminRefundService.authorizeRefund(adminId, refundId, request)
+                adminRefundService.deny(adminId, refundId, request)
+        ));
+    }
+
+    @PutMapping("/{refundId}/complete")
+    public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> complete(
+            @PathVariable Long refundId
+    ) {
+        Long adminId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(
+                SuccessEnum.UPDATE_SUCCESS,
+                adminRefundService.complete(adminId, refundId)
         ));
     }
 

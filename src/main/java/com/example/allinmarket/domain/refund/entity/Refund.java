@@ -61,7 +61,7 @@ public class Refund extends ModifiableEntity {
         return refund;
     }
 
-    public void complete(String impUid) {
+    public void complete() {
         this.status = TransactionStatus.SUCCESS;
         this.processedAt = LocalDateTime.now();
     }
@@ -70,7 +70,8 @@ public class Refund extends ModifiableEntity {
         this.status = TransactionStatus.FAILED;
     }
 
-    public void denied() {
+    public void deny(String deniedReason) {
         this.status = TransactionStatus.DENIED;
+        this.deniedReason = deniedReason;
     }
 }
