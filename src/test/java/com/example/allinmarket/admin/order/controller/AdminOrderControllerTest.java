@@ -61,7 +61,7 @@ class AdminOrderControllerTest {
                 List.of(response), 1, 1, 1L, 10, true
         );
 
-        when(adminOrderService.findAll(any(Pageable.class)))
+        when(adminOrderService.findAll(any(Long.class), any(Pageable.class)))
                 .thenReturn(pageResponse);
 
         // when & then
@@ -86,7 +86,7 @@ class AdminOrderControllerTest {
                 List.of(), 1, 0, 0L, 10, true
         );
 
-        when(adminOrderService.findAll(any(Pageable.class)))
+        when(adminOrderService.findAll(any(Long.class), any(Pageable.class)))
                 .thenReturn(emptyPage);
 
         // when & then
@@ -108,7 +108,7 @@ class AdminOrderControllerTest {
                 List.of(), 2, 5, 42L, 10, false
         );
 
-        when(adminOrderService.findAll(any(Pageable.class)))
+        when(adminOrderService.findAll(any(Long.class), any(Pageable.class)))
                 .thenReturn(pageResponse);
 
         // when & then
@@ -135,7 +135,7 @@ class AdminOrderControllerTest {
                 "홍길동", "서울시 강남구"
         );
 
-        when(adminOrderService.updateStaus(any(Long.class), any()))
+        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
                 .thenReturn(response);
 
         String requestBody = """
@@ -162,7 +162,7 @@ class AdminOrderControllerTest {
         // given
         setAuth();
 
-        when(adminOrderService.updateStaus(any(Long.class), any()))
+        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
                 .thenThrow(new BaseException(ErrorEnum.ORDER_NOT_FOUND));
 
         String requestBody = """
@@ -173,6 +173,28 @@ class AdminOrderControllerTest {
 
         // when & then
         restTestClient.put().uri("/admin/orders/999/status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .exchange()
+                .expectStatus().is4xxClientError();
+    }
+
+    @Test
+    void 관리자_주문상태_변경_불가상태_실패_테스트() {
+        // given
+        setAuth();
+
+        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
+                .thenThrow(new BaseException(ErrorEnum.ORDER_STATUS_CANNOT_BE_CHANGED));
+
+        String requestBody = """
+                {
+                    "status": "PAID"
+                }
+                """;
+
+        // when & then
+        restTestClient.put().uri("/admin/orders/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .exchange()
