@@ -6,6 +6,7 @@ import com.example.allinmarket.buyer.order.dto.response.OrderDetailResponse;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
 import com.example.allinmarket.common.response.PageResponse;
+import com.example.allinmarket.common.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +26,8 @@ public class AdminOrderController {
     public ResponseEntity<ApiResponse<PageResponse<OrderDetailResponse>>> findAll(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.READ_SUCCESS, adminOrderService.findAll(pageable)));
+        Long adminId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.READ_SUCCESS, adminOrderService.findAll(adminId, pageable)));
     }
 
     @PutMapping("/{orderId}/status")
@@ -33,6 +35,7 @@ public class AdminOrderController {
             @PathVariable(name = "orderId") Long orderId,
             @Valid @RequestBody AdminOrderUpdateStatusRequest request
     ) {
-        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.UPDATE_SUCCESS, adminOrderService.updateStaus(orderId, request)));
+        Long adminId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.UPDATE_SUCCESS, adminOrderService.updateStaus(adminId, orderId, request)));
     }
 }

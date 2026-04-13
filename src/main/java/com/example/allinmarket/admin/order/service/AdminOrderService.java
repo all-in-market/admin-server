@@ -19,7 +19,10 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
 
-    public PageResponse<OrderDetailResponse> findAll(Pageable pageable) {
+    public PageResponse<OrderDetailResponse> findAll(Long adminId, Pageable pageable) {
+
+        validationForbidden(adminId);
+
         return PageResponse.register(
                 orderRepository.findAllBy(pageable)
                         .map(OrderDetailResponse::from)
@@ -27,7 +30,10 @@ public class AdminOrderService {
     }
 
     @Transactional
-    public OrderDetailResponse updateStaus(Long orderId, AdminOrderUpdateStatusRequest request) {
+    public OrderDetailResponse updateStaus(Long adminId, Long orderId, AdminOrderUpdateStatusRequest request) {
+
+        validationForbidden(adminId);
+
         Order order = orderRepository.findById(orderId).orElseThrow(
                 () -> new BaseException(ErrorEnum.ORDER_NOT_FOUND)
         );
@@ -35,5 +41,11 @@ public class AdminOrderService {
         order.updateStatus(request.status());
 
         return OrderDetailResponse.from(order);
+    }
+
+    private void validationForbidden(Long adminId) {
+        if (!adminRepository.existsByIdAndDeletedAtIsNull(adminId)) {
+            throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
+        }
     }
 }
