@@ -4,15 +4,16 @@ import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.buyer.category.dto.CategoryDetailResponse;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
-import com.example.allinmarket.domain.category.entity.Category;
 import com.example.allinmarket.domain.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AdminCategoryService {
 
     private final AdminRepository adminRepository;
@@ -24,7 +25,7 @@ public class AdminCategoryService {
             throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
         }
 
-        return categoryRepository.findAllAndDeletedAtIsNull().stream()
+        return categoryRepository.findAllByDeletedAtIsNull().stream()
                 .map(CategoryDetailResponse::from)
                 .toList();
     }

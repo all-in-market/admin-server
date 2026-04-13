@@ -8,5 +8,6 @@ import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findByIdAndDeletedAtIsNull(Long id);
-    List<Category> findAllAndDeletedAtIsNull();
+
+    List<Category> findAllByDeletedAtIsNull();
 }
