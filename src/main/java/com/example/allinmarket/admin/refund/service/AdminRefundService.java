@@ -33,6 +33,7 @@ public class AdminRefundService {
         );
     }
 
+    @Transactional
     public AuthorizeRefundResponse deny(Long adminId, Long refundId, DenyRefundRequest request) {
 
         validationForbidden(adminId);
@@ -46,6 +47,7 @@ public class AdminRefundService {
         return AuthorizeRefundResponse.from(refund);
     }
 
+    @Transactional
     public AuthorizeRefundResponse complete(Long adminId, Long refundId) {
 
         validationForbidden(adminId);
