@@ -32,11 +32,6 @@ public class AdminRefundController {
         return ResponseEntity.ok(ApiResponse.success(SuccessEnum.READ_SUCCESS, adminRefundService.findAll(adminId, pageable)));
     }
 
-    @Retryable(
-            retryFor = OptimisticLockingFailureException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 100)
-    )
     @PutMapping("/{refundId}/deny")
     public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> deny(
             @PathVariable Long refundId,
@@ -49,11 +44,6 @@ public class AdminRefundController {
         ));
     }
 
-    @Retryable(
-            retryFor = OptimisticLockingFailureException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 100)
-    )
     @PutMapping("/{refundId}/complete")
     public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> complete(
             @PathVariable Long refundId
