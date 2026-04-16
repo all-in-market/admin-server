@@ -11,7 +11,10 @@ import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,11 @@ public class AdminRefundService {
         );
     }
 
+    @Retryable(
+            retryFor = OptimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100)
+    )
     @Transactional
     public AuthorizeRefundResponse deny(Long adminId, Long refundId, DenyRefundRequest request) {
 
@@ -47,6 +55,11 @@ public class AdminRefundService {
         return AuthorizeRefundResponse.from(refund);
     }
 
+    @Retryable(
+            retryFor = OptimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100)
+    )
     @Transactional
     public AuthorizeRefundResponse complete(Long adminId, Long refundId) {
 

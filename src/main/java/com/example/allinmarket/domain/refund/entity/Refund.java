@@ -49,6 +49,10 @@ public class Refund extends ModifiableEntity {
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
+    @Column(nullable = false)
+    @Version
+    private Long version;
+
     public static Refund of(Buyer buyer, Payment payment, ReasonEnum reasonEnum, String description) {
         Refund refund = new Refund();
         refund.buyer = buyer;
