@@ -4,7 +4,7 @@ import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.common.entity.ModifiableEntity;
 import com.example.allinmarket.domain.payment.entity.Payment;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
@@ -27,8 +27,8 @@ public class Refund extends ModifiableEntity {
     @JoinColumn(name = "buyer_id", nullable = false)
     private Buyer buyer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id", nullable = false, unique = true)
     private Payment payment;
 
     @Enumerated(EnumType.STRING)
@@ -44,7 +44,7 @@ public class Refund extends ModifiableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TransactionStatus status = TransactionStatus.PENDING;
+    private RefundStatus status = RefundStatus.PENDING;
 
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
@@ -60,22 +60,35 @@ public class Refund extends ModifiableEntity {
         refund.reason = reasonEnum;
         refund.description = description;
         refund.deniedReason = null;
-        refund.status = TransactionStatus.PENDING;
+        refund.status = RefundStatus.PENDING;
         refund.processedAt = null;
         return refund;
     }
 
-    public void complete() {
-        this.status = TransactionStatus.SUCCESS;
-        this.processedAt = LocalDateTime.now();
+    public void success() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.SUCCESS)) {
+            this.status = RefundStatus.SUCCESS;
+            this.processedAt = LocalDateTime.now();
+        }
     }
 
-    public void fail() {
-        this.status = TransactionStatus.FAILED;
+    public void complete() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.SUCCESS)) {
+            this.status = RefundStatus.SUCCESS;
+            this.processedAt = LocalDateTime.now();
+        }
     }
 
     public void deny(String deniedReason) {
-        this.status = TransactionStatus.DENIED;
-        this.deniedReason = deniedReason;
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.DENIED)) {
+            this.status = RefundStatus.DENIED;
+            this.deniedReason = deniedReason;
+        }
+    }
+
+    public void pending() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.PENDING)) {
+            this.status = RefundStatus.PENDING;
+        }
     }
 }
