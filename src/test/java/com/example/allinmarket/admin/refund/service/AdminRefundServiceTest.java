@@ -13,7 +13,9 @@ import com.example.allinmarket.domain.payment.entity.Payment;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
+import com.example.allinmarket.domain.sellerdashboard.service.DashboardService;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.transactionhistory.service.TransactionHistoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,6 +42,12 @@ class AdminRefundServiceTest {
 
     @Mock
     private AdminRepository adminRepository;
+
+    @Mock
+    private TransactionHistoryService transactionHistoryService;
+
+    @Mock
+    private DashboardService dashboardService;
 
     @InjectMocks
     private AdminRefundService adminRefundService;
@@ -224,6 +232,7 @@ class AdminRefundServiceTest {
         given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
 
         Order order = mock(Order.class);
+        given(order.getId()).willReturn(1L);
 
         Payment payment = mock(Payment.class);
         given(payment.getId()).willReturn(1L);
@@ -254,6 +263,7 @@ class AdminRefundServiceTest {
         verify(refund).complete();
         verify(payment).cancel();
         verify(order).updateStatus(OrderStatus.REFUNDED);
+        verify(dashboardService).updateSellerDashboardWithRefund(1L);
     }
 
     @Test

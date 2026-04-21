@@ -7,10 +7,14 @@ import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.domain.order.enums.OrderStatus;
+import com.example.allinmarket.domain.payment.repository.PaymentRepository;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
+import com.example.allinmarket.domain.sellerdashboard.service.DashboardService;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.transactionhistory.service.TransactionHistoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.retry.annotation.Backoff;
@@ -21,10 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AdminRefundService {
 
     private final RefundRepository refundRepository;
     private final AdminRepository adminRepository;
+    private final TransactionHistoryService transactionHistoryService;
+    private final DashboardService dashboardService;
 
     public PageResponse<AuthorizeRefundResponse> findAll(Long adminId, Pageable pageable) {
 
@@ -72,8 +79,25 @@ public class AdminRefundService {
         // 외부 API - 환불 요청 refund.getPayment.getImpUid();
 
         refund.complete();
+        // TransactionHistory에 refund.complete() 내역 추가
+        try {
+            transactionHistoryService.saveRefundHistory(refund);
+            log.info("환불 승인 이력 저장 성공: refundId = {}", refund.getId());
+        } catch (Exception e) {
+            log.error("환불 승인 이력 저장 실패: refundId = {}, reason = {}", refund.getId(), e.getMessage());
+        }
+
         refund.getPayment().cancel();
+        // TransactionHistory에 payment.cancel() 내역 추가
+        try {
+            transactionHistoryService.savePaymentHistory(refund.getPayment());
+            log.info("결제 취소 이력 저장 성공: paymentId = {}", refund.getPayment().getId());
+        } catch (Exception e) {
+            log.error("결제 취소 이력 저장 실패: paymentId = {}, reason = {}", refund.getPayment().getId(), e.getMessage());
+        }
         refund.getPayment().getOrder().updateStatus(OrderStatus.REFUNDED);
+        // SellerDashboard에 주문 취소 내역 반영
+        dashboardService.updateSellerDashboardWithRefund(refund.getPayment().getOrder().getId());
 
         return AuthorizeRefundResponse.from(refund);
 
