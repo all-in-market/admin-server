@@ -1,6 +1,5 @@
 package com.example.allinmarket.seller.entity;
 
-import com.example.allinmarket.admin.seller.dto.SellerStatusUpdateRequest;
 import com.example.allinmarket.common.entity.DeletableEntity;
 import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.seller.enums.SellerStatus;

@@ -1,8 +1,8 @@
 package com.example.allinmarket.admin.refund.service;
 
 import com.example.allinmarket.admin.entity.Admin;
-import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
+import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.buyer.repository.BuyerRepository;
 import com.example.allinmarket.domain.order.entity.Order;
@@ -13,8 +13,8 @@ import com.example.allinmarket.domain.payment.enums.MethodEnum;
 import com.example.allinmarket.domain.payment.repository.PaymentRepository;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
@@ -84,7 +84,7 @@ class AdminRefundOptimisticLockServiceTest {
             order.updateStatus(OrderStatus.PAID);
 
             Payment payment = paymentRepository.save(
-                    Payment.of(order, BigDecimal.valueOf(10000), MethodEnum.MOCK)
+                    Payment.of(order, "mock-imp-uid", BigDecimal.valueOf(10000), MethodEnum.MOCK)
             );
 
             Refund refund = refundRepository.save(
@@ -272,7 +272,7 @@ class AdminRefundOptimisticLockServiceTest {
         em.close();
 
         assertThat(after.getVersion()).isGreaterThan(versionBefore);
-        assertThat(after.getStatus()).isEqualTo(TransactionStatus.SUCCESS);
+        assertThat(after.getStatus()).isEqualTo(RefundStatus.SUCCESS);
     }
 
     @Test
@@ -290,7 +290,7 @@ class AdminRefundOptimisticLockServiceTest {
         em.close();
 
         assertThat(after.getVersion()).isGreaterThan(versionBefore);
-        assertThat(after.getStatus()).isEqualTo(TransactionStatus.DENIED);
+        assertThat(after.getStatus()).isEqualTo(RefundStatus.DENIED);
     }
 
     @Test

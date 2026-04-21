@@ -12,9 +12,9 @@ import com.example.allinmarket.domain.order.enums.OrderStatus;
 import com.example.allinmarket.domain.payment.entity.Payment;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
 import com.example.allinmarket.domain.sellerdashboard.service.DashboardService;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
 import com.example.allinmarket.domain.transactionhistory.service.TransactionHistoryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,7 +66,7 @@ class AdminRefundServiceTest {
         given(refund.getReason()).willReturn(ReasonEnum.CHANGE_OF_MIND);
         given(refund.getDescription()).willReturn("환불 사유");
         given(refund.getDeniedReason()).willReturn(null);
-        given(refund.getStatus()).willReturn(TransactionStatus.PENDING);
+        given(refund.getStatus()).willReturn(RefundStatus.PENDING);
         given(refund.getProcessedAt()).willReturn(null);
         return refund;
     }
@@ -94,7 +94,7 @@ class AdminRefundServiceTest {
         assertEquals(1, result.totalElements());
         assertEquals(1, result.content().size());
         assertEquals(1L, result.content().get(0).id());
-        assertEquals(TransactionStatus.PENDING, result.content().get(0).status());
+        assertEquals(RefundStatus.PENDING, result.content().get(0).status());
     }
 
     @Test
@@ -169,7 +169,7 @@ class AdminRefundServiceTest {
         given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
 
         Refund refund = createRefundMock(refundId);
-        given(refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING))
+        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
                 .willReturn(Optional.of(refund));
 
         DenyRefundRequest request = new DenyRefundRequest("환불 불가 사유");
@@ -208,7 +208,7 @@ class AdminRefundServiceTest {
         Long refundId = 999L;
 
         given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
-        given(refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING))
+        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
                 .willReturn(Optional.empty());
 
         DenyRefundRequest request = new DenyRefundRequest("환불 불가 사유");
@@ -248,10 +248,10 @@ class AdminRefundServiceTest {
         given(refund.getReason()).willReturn(ReasonEnum.CHANGE_OF_MIND);
         given(refund.getDescription()).willReturn("환불 사유");
         given(refund.getDeniedReason()).willReturn(null);
-        given(refund.getStatus()).willReturn(TransactionStatus.PENDING);
+        given(refund.getStatus()).willReturn(RefundStatus.PENDING);
         given(refund.getProcessedAt()).willReturn(null);
 
-        given(refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING))
+        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
                 .willReturn(Optional.of(refund));
 
         // when
@@ -289,7 +289,7 @@ class AdminRefundServiceTest {
         Long refundId = 999L;
 
         given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
-        given(refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING))
+        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
                 .willReturn(Optional.empty());
 
         // when & then

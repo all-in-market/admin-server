@@ -100,9 +100,7 @@ public class SellerDashboard extends ModifiableEntity {
     }
 
     public void cancelOrder(BigDecimal refundAmount, int productsRefunded) {
-        this.totalOrders -=1;
         this.totalRefunds +=1;
-        this.totalProductsSold -=productsRefunded;
         this.refundAmount = this.refundAmount.add(refundAmount);
         this.feeAmount = this.totalSales.subtract(this.refundAmount).multiply(COMMISSION_RATE);
         this.settlementAmount = this.totalSales.subtract(refundAmount.add(feeAmount));

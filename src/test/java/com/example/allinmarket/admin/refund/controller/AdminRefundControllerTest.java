@@ -8,7 +8,7 @@ import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.common.security.JwtProvider;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -45,7 +45,7 @@ class AdminRefundControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    private AuthorizeRefundResponse createRefundResponse(Long refundId, TransactionStatus status) {
+    private AuthorizeRefundResponse createRefundResponse(Long refundId, RefundStatus status) {
         return new AuthorizeRefundResponse(
                 refundId, 1L, 1L,
                 ReasonEnum.CHANGE_OF_MIND,
@@ -62,7 +62,7 @@ class AdminRefundControllerTest {
         setAuth();
 
         PageResponse<AuthorizeRefundResponse> pageResponse = new PageResponse<>(
-                List.of(createRefundResponse(1L, TransactionStatus.PENDING)),
+                List.of(createRefundResponse(1L, RefundStatus.PENDING)),
                 1, 1, 1L, 10, true
         );
 
@@ -135,7 +135,7 @@ class AdminRefundControllerTest {
         setAuth();
 
         when(adminRefundService.deny(any(Long.class), any(Long.class), any(DenyRefundRequest.class)))
-                .thenReturn(createRefundResponse(1L, TransactionStatus.DENIED));
+                .thenReturn(createRefundResponse(1L, RefundStatus.DENIED));
 
         String requestBody = """
                 {
@@ -186,7 +186,7 @@ class AdminRefundControllerTest {
         setAuth();
 
         when(adminRefundService.complete(any(Long.class), any(Long.class)))
-                .thenReturn(createRefundResponse(1L, TransactionStatus.SUCCESS));
+                .thenReturn(createRefundResponse(1L, RefundStatus.SUCCESS));
 
         // when & then
         restTestClient.put().uri("/admin/refunds/1/complete")

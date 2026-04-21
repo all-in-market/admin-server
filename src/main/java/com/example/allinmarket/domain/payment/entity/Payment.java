@@ -3,7 +3,7 @@ package com.example.allinmarket.domain.payment.entity;
 import com.example.allinmarket.common.entity.ModifiableEntity;
 import com.example.allinmarket.domain.order.entity.Order;
 import com.example.allinmarket.domain.payment.enums.MethodEnum;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.payment.enums.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -28,7 +28,7 @@ public class Payment extends ModifiableEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String impUid;
 
     @PositiveOrZero
@@ -41,33 +41,41 @@ public class Payment extends ModifiableEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private TransactionStatus status = TransactionStatus.PENDING;
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
-    public static Payment of(Order order, BigDecimal amount, MethodEnum method) {
+    @Version
+    private Long version;
+
+    public static Payment of(Order order, String impUid, BigDecimal amount, MethodEnum method) {
         Payment payment = new Payment();
         payment.order = order;
-        payment.impUid = null;
+        payment.impUid = impUid;
         payment.amount = amount != null ? amount : BigDecimal.ZERO;
         payment.method = method;
-        payment.status = TransactionStatus.PENDING;
+        payment.status = PaymentStatus.PENDING;
         payment.paidAt = null;
         return payment;
     }
 
-    public void complete(String impUid) {
-        this.impUid = impUid;
-        this.status = TransactionStatus.SUCCESS;
-        this.paidAt = LocalDateTime.now();
+    public void success(LocalDateTime paidAt) {
+        if (this.status.paymentCanTransitToTargetStatus(PaymentStatus.SUCCESS)) {
+            this.status = PaymentStatus.SUCCESS;
+            this.paidAt = paidAt;
+        }
     }
 
     public void fail() {
-        this.status = TransactionStatus.FAILED;
+        if (this.status.paymentCanTransitToTargetStatus(PaymentStatus.FAILED)) {
+            this.status = PaymentStatus.FAILED;
+        }
     }
 
     public void cancel() {
-        this.status = TransactionStatus.REFUNDED;
+        if (this.status.paymentCanTransitToTargetStatus(PaymentStatus.REFUNDED)) {
+            this.status = PaymentStatus.REFUNDED;
+        }
     }
 }
