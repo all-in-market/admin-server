@@ -2,6 +2,7 @@ package com.example.allinmarket.admin.refund.dto.response;
 
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ public record AuthorizeRefundResponse (
         ReasonEnum reason,
         String description,
         String deniedReason, //nullable
-        TransactionStatus status,
+        RefundStatus status,
         LocalDateTime processedAt //nullable
 ){
     public static AuthorizeRefundResponse from(Refund refund) {

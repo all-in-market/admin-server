@@ -35,8 +35,7 @@ public class Refund extends ModifiableEntity {
     @Column(nullable = false, length = 50)
     private ReasonEnum reason;
 
-    @NotBlank
-    @Column(nullable = false)
+    @Column
     private String description;
 
     @Column(name = "denied_reason")

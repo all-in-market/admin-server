@@ -9,6 +9,7 @@ import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.domain.order.enums.OrderStatus;
 import com.example.allinmarket.domain.payment.repository.PaymentRepository;
 import com.example.allinmarket.domain.refund.entity.Refund;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
 import com.example.allinmarket.domain.sellerdashboard.service.DashboardService;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
@@ -53,7 +54,7 @@ public class AdminRefundService {
 
         validationForbidden(adminId);
 
-        Refund refund = refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING).orElseThrow(
+        Refund refund = refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
@@ -72,7 +73,7 @@ public class AdminRefundService {
 
         validationForbidden(adminId);
 
-        Refund refund = refundRepository.findByIdAndStatus(refundId, TransactionStatus.PENDING).orElseThrow(
+        Refund refund = refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
