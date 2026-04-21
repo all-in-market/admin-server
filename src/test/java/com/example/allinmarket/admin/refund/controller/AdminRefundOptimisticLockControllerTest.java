@@ -4,7 +4,7 @@ import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
-import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * AdminRefundController HTTP 레이어 테스트
- *
+ * <p>
  * 재시도(@Retryable) 로직은 서비스 레이어에 위치하므로 AdminRefundOptimisticLockServiceTest에서 검증한다.
  * 이 테스트는 컨트롤러가 담당하는 HTTP 관심사만 검증한다:
  * - 요청 URL/메서드 매핑
@@ -40,18 +40,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class AdminRefundOptimisticLockControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
-    private AdminRefundService adminRefundService;
-
     private static final UsernamePasswordAuthenticationToken ADMIN_AUTH =
             new UsernamePasswordAuthenticationToken(
                     1L, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
             );
+    @Autowired
+    private MockMvc mockMvc;
+    @MockitoBean
+    private AdminRefundService adminRefundService;
 
-    private AuthorizeRefundResponse successResponse(TransactionStatus status) {
+    private AuthorizeRefundResponse successResponse(RefundStatus status) {
         return new AuthorizeRefundResponse(
                 1L, 1L, 1L,
                 ReasonEnum.CHANGE_OF_MIND,
@@ -65,7 +63,7 @@ class AdminRefundOptimisticLockControllerTest {
     @Test
     void complete_서비스_성공시_200OK_반환() throws Exception {
         when(adminRefundService.complete(any(), any()))
-                .thenReturn(successResponse(TransactionStatus.SUCCESS));
+                .thenReturn(successResponse(RefundStatus.SUCCESS));
 
         mockMvc.perform(put("/admin/refunds/1/complete")
                         .with(authentication(ADMIN_AUTH)))
@@ -93,7 +91,7 @@ class AdminRefundOptimisticLockControllerTest {
     @Test
     void deny_서비스_성공시_200OK_반환() throws Exception {
         when(adminRefundService.deny(any(), any(), any(DenyRefundRequest.class)))
-                .thenReturn(successResponse(TransactionStatus.DENIED));
+                .thenReturn(successResponse(RefundStatus.DENIED));
 
         mockMvc.perform(put("/admin/refunds/1/deny")
                         .with(authentication(ADMIN_AUTH))
