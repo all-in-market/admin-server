@@ -4,6 +4,7 @@ import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.common.entity.ModifiableEntity;
 import com.example.allinmarket.domain.payment.entity.Payment;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
+import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.transactionhistory.enums.TransactionStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -44,7 +45,7 @@ public class Refund extends ModifiableEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TransactionStatus status = TransactionStatus.PENDING;
+    private RefundStatus status = RefundStatus.PENDING;
 
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
