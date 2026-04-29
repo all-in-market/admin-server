@@ -32,7 +32,7 @@ public class AdminOrderService {
     }
 
     @Transactional
-    public OrderDetailResponse updateStaus(Long adminId, Long orderId, AdminOrderUpdateStatusRequest request) {
+    public OrderDetailResponse updateStatus(Long adminId, Long orderId, AdminOrderUpdateStatusRequest request) {
 
         validationForbidden(adminId);
 
