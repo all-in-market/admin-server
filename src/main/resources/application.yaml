@@ -10,6 +10,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:validate}
@@ -19,14 +24,6 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: true
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration
-      - org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAutoConfiguration
-      - org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
-      - org.redisson.spring.starter.RedissonAutoConfigurationV4
 
 jwt:
   secret: ${JWT_SECRET}

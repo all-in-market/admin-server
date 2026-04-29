@@ -41,9 +41,8 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:4.3.0'
-
-    // Kafka
-    implementation 'org.springframework.boot:spring-boot-starter-kafka'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok'
