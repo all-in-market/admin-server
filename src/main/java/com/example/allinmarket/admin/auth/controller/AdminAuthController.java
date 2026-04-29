@@ -1,11 +1,9 @@
 package com.example.allinmarket.admin.auth.controller;
 
 import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
-import com.example.allinmarket.admin.auth.dto.response.AdminLoginResponse;
 import com.example.allinmarket.admin.auth.dto.response.LoginResult;
 import com.example.allinmarket.admin.auth.service.AdminAuthService;
-import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -13,10 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -27,16 +22,7 @@ public class AdminAuthController {
     private final AdminAuthService adminAuthService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AdminLoginResponse>> login(@Valid @RequestBody AdminLoginRequest request) {
-        AdminLoginResponse response = adminAuthService.login(request);
-        String token = response.accessToken();
-        return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + token)
-                .body(ApiResponse.success(SuccessEnum.LOGIN_SUCCESS, response));
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<BuyerLoginResponse>> login(@Valid @RequestBody AdminLoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody AdminLoginRequest request) {
         LoginResult result = adminAuthService.login(request);
         ResponseCookie cookie = ResponseCookie.from("refreshToken", result.refreshToken())
                 .httpOnly(true) // JS에서 document.cookie로 접근 불가 -> XSS 공격으로 토큰 탈취 방지
@@ -50,8 +36,37 @@ public class AdminAuthController {
                 .body(ApiResponse.success(SuccessEnum.LOGIN_SUCCESS, result.response()));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
+            @CookieValue("refreshToken") String refreshToken) {
+        LoginResult result = adminAuthService.refresh(refreshToken);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", result.refreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/auth")
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Strict")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ApiResponse.success(SuccessEnum.TOKEN_REFRESHED, result.response()));
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
-        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.LOGOUT_SUCCESS, null));
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader("Authorization") String authHeader,
+            @CookieValue(value = "refreshToken", required = false) String refreshToken
+    ) {
+        String accessToken = authHeader.substring(7);
+        adminAuthService.logout(accessToken, refreshToken);
+
+        ResponseCookie expired = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .maxAge(0)
+                .path("/auth")
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expired.toString())
+                .body(ApiResponse.success(SuccessEnum.LOGOUT_SUCCESS, null));
     }
 }

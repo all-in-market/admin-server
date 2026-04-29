@@ -4,8 +4,9 @@ import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
 import com.example.allinmarket.admin.auth.dto.response.LoginResult;
 import com.example.allinmarket.admin.entity.Admin;
 import com.example.allinmarket.admin.repository.AdminRepository;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.common.enums.ErrorEnum;
+import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,29 @@ public class AdminAuthService {
         // Refresh 토큰 유효기간 일주일로 설정
         redisTemplate.opsForValue().set("refresh:" + refreshToken, admin.getId(), 7, TimeUnit.DAYS);
 
-        BuyerLoginResponse response = new BuyerLoginResponse(accessToken);
+        LoginResponse response = new LoginResponse(accessToken);
         return new LoginResult(response, refreshToken);
+    }
+
+    public LoginResult refresh(String refreshToken) {
+        Long userId = (Long) redisTemplate.opsForValue().get("refresh:" + refreshToken);
+        if (userId == null) {
+            throw new BaseException(ErrorEnum.TOKEN_EXPIRED);
+        }
+
+        redisTemplate.delete("refresh:" + refreshToken);
+        String newRefreshToken = UUID.randomUUID().toString();
+        redisTemplate.opsForValue().set("refresh:" + newRefreshToken, userId, 7, TimeUnit.DAYS);
+
+        String newAccessToken = jwtProvider.generateToken(userId, UserRole.ADMIN);
+        return new LoginResult(new LoginResponse(newAccessToken), newRefreshToken);
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+        long remaining = jwtProvider.getRemainingExpiration(accessToken);
+        redisTemplate.opsForValue()
+                .set("blacklist:" + accessToken, "logout", remaining, TimeUnit.MILLISECONDS);
+
+        redisTemplate.delete("refresh:" + refreshToken);
     }
 }

@@ -3,7 +3,7 @@ package com.example.allinmarket.buyer.auth.service;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerSignupRequest;
 import com.example.allinmarket.buyer.auth.dto.response.BuyerAuthResponse;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.buyer.repository.BuyerRepository;
 import com.example.allinmarket.common.enums.ErrorEnum;
@@ -119,7 +119,7 @@ public class BuyerAuthServiceTest {
         given(jwtProvider.generateToken(buyer.getId(), buyer.getRole())).willReturn("test-accessToken");
 
         // when
-        BuyerLoginResponse response = buyerAuthService.login(request);
+        LoginResponse response = buyerAuthService.login(request);
 
         // then
         assertThat(response.accessToken()).isEqualTo("test-accessToken");

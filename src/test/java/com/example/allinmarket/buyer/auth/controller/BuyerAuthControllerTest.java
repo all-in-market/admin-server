@@ -3,7 +3,7 @@ package com.example.allinmarket.buyer.auth.controller;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerSignupRequest;
 import com.example.allinmarket.buyer.auth.dto.response.BuyerAuthResponse;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.buyer.auth.service.BuyerAuthService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.security.JwtProvider;
@@ -95,7 +95,7 @@ public class BuyerAuthControllerTest {
                 "12345678"
         );
 
-        BuyerLoginResponse response = new BuyerLoginResponse("test-accessToken");
+        LoginResponse response = new LoginResponse("test-accessToken");
 
         given(buyerAuthService.login(any(BuyerLoginRequest.class))).willReturn(response);
 
