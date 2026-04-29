@@ -8,6 +8,6 @@ public record CategoryUpdateRequest(
         String name,
 
         @PositiveOrZero(message = "순서는 0 또는 양수로 지정해 주세요")
-        int sortOrder
+        Integer sortOrder
 ) {
 }

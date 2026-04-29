@@ -7,6 +7,7 @@ import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.common.security.SecurityUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +36,7 @@ public class AdminRefundController {
     @PutMapping("/{refundId}/deny")
     public ResponseEntity<ApiResponse<AuthorizeRefundResponse>> deny(
             @PathVariable Long refundId,
-            @RequestBody DenyRefundRequest request
+            @RequestBody @Valid DenyRefundRequest request
     ) {
         Long adminId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.success(
