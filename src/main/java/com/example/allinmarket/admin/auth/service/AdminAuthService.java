@@ -38,7 +38,7 @@ public class AdminAuthService {
         );
 
         if (admin.getDeletedAt() != null) {
-            log.warn("로그인 실패: {}", ErrorEnum.BUYER_ALREADY_DELETED);
+            log.warn("로그인 실패: {}", ErrorEnum.ADMIN_ALREADY_DELETED);
             throw new BaseException(ErrorEnum.LOGIN_FAILED);
         }
 
