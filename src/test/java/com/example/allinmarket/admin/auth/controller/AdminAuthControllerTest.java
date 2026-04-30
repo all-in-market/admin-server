@@ -1,10 +1,9 @@
-package com.example.allinmarket.admin.order.auth.controller;
+package com.example.allinmarket.admin.auth.controller;
 
-import com.example.allinmarket.admin.auth.controller.AdminAuthController;
 import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
-import com.example.allinmarket.admin.auth.dto.response.LoginResult;
 import com.example.allinmarket.admin.auth.service.AdminAuthService;
 import com.example.allinmarket.common.auth.dto.LoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResult;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.common.security.JwtProvider;

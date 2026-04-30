@@ -1,10 +1,10 @@
 package com.example.allinmarket.admin.auth.service;
 
 import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
-import com.example.allinmarket.admin.auth.dto.response.LoginResult;
 import com.example.allinmarket.admin.entity.Admin;
 import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.common.auth.dto.LoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResult;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.common.exception.BaseException;
