@@ -58,12 +58,18 @@ public class AdminAuthService {
     }
 
     public LoginResult refresh(String refreshToken) {
-        Long userId = (Long) redisTemplate.opsForValue().get("refresh:" + refreshToken);
+        Long userId = (Long) redisTemplate.opsForValue().getAndDelete("refresh:" + refreshToken);
         if (userId == null) {
             throw new BaseException(ErrorEnum.TOKEN_EXPIRED);
         }
 
-        redisTemplate.delete("refresh:" + refreshToken);
+        Admin admin = adminRepository.findById(userId).orElseThrow(
+                () -> new BaseException(ErrorEnum.ADMIN_NOT_FOUND)
+        );
+        if (admin.getDeletedAt() != null) {
+            throw new BaseException(ErrorEnum.ADMIN_ALREADY_DELETED);
+        }
+
         String newRefreshToken = UUID.randomUUID().toString();
         redisTemplate.opsForValue().set("refresh:" + newRefreshToken, userId, 7, TimeUnit.DAYS);
 
@@ -73,9 +79,10 @@ public class AdminAuthService {
 
     public void logout(String accessToken, String refreshToken) {
         long remaining = jwtProvider.getRemainingExpiration(accessToken);
-        redisTemplate.opsForValue()
-                .set("blacklist:" + accessToken, "logout", remaining, TimeUnit.MILLISECONDS);
-
+        if (remaining > 0) {
+            redisTemplate.opsForValue()
+                    .set("blacklist:" + accessToken, "logout", remaining, TimeUnit.MILLISECONDS);
+        }
         redisTemplate.delete("refresh:" + refreshToken);
     }
 }

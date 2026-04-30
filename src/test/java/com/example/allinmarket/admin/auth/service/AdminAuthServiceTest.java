@@ -137,8 +137,12 @@ public class AdminAuthServiceTest {
         String oldRefreshToken = "old-refresh-token";
         Long userId = 1L;
 
+        Admin admin = Admin.of("관리자@테스트.com", "비밀번호암호화", "테스트");
+        ReflectionTestUtils.setField(admin, "id", userId);
+
         given(redisTemplate.opsForValue()).willReturn(valueOps);
-        given(valueOps.get("refresh:" + oldRefreshToken)).willReturn(userId);
+        given(valueOps.getAndDelete("refresh:" + oldRefreshToken)).willReturn(userId);
+        given(adminRepository.findById(userId)).willReturn(Optional.of(admin));
         given(jwtProvider.generateToken(userId, UserRole.ADMIN)).willReturn("new-accessToken");
 
         // when
@@ -155,7 +159,7 @@ public class AdminAuthServiceTest {
         String expiredToken = "expired-refresh-token";
 
         given(redisTemplate.opsForValue()).willReturn(valueOps);
-        given(valueOps.get("refresh:" + expiredToken)).willReturn(null);
+        given(valueOps.getAndDelete("refresh:" + expiredToken)).willReturn(null);
 
         // when & then
         assertThatThrownBy(() -> adminAuthService.refresh(expiredToken))

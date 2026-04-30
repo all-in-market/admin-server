@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -30,6 +31,9 @@ public class AdminAuthControllerTest {
 
     @MockitoBean
     private AdminAuthService adminAuthService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 로그인_성공_테스트() {
@@ -93,7 +97,7 @@ public class AdminAuthControllerTest {
                 .expectHeader().valueMatches(HttpHeaders.SET_COOKIE, ".*refreshToken=new-refreshToken.*")
                 .expectBody()
                 .jsonPath("$.success").isEqualTo(true)
-                .jsonPath("$.status").isEqualTo(201)
+                .jsonPath("$.status").isEqualTo(200)
                 .jsonPath("$.message").isEqualTo(SuccessEnum.TOKEN_REFRESHED.getMessage())
                 .jsonPath("$.data.accessToken").isEqualTo("new-accessToken");
     }

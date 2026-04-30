@@ -4,11 +4,13 @@ import com.example.allinmarket.admin.auth.dto.request.AdminLoginRequest;
 import com.example.allinmarket.admin.auth.service.AdminAuthService;
 import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.common.auth.dto.LoginResult;
+import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,8 +57,12 @@ public class AdminAuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @RequestHeader("Authorization") String authHeader,
-            @CookieValue(value = "refreshToken", required = false) String refreshToken
+            @CookieValue("refreshToken") String refreshToken
     ) {
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail(ErrorEnum.UNAUTHORIZED));
+        }
         String accessToken = authHeader.substring(7);
         adminAuthService.logout(accessToken, refreshToken);
 
