@@ -64,7 +64,7 @@ public class AdminAuthController {
                     .body(ApiResponse.fail(ErrorEnum.UNAUTHORIZED));
         }
         String accessToken = authHeader.substring(7);
-        adminAuthService.logout(accessToken, refreshToken);
+        adminAuthService.logout(accessToken);
 
         ResponseCookie expired = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)

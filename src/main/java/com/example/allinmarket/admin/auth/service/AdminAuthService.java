@@ -6,7 +6,6 @@ import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.common.auth.dto.LoginResult;
 import com.example.allinmarket.common.enums.ErrorEnum;
-import com.example.allinmarket.common.enums.UserRole;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -50,8 +50,9 @@ public class AdminAuthService {
         String accessToken = jwtProvider.generateToken(admin.getId(), admin.getRole());
         String refreshToken = UUID.randomUUID().toString();
 
-        // Refresh 토큰 유효기간 일주일로 설정
         redisTemplate.opsForValue().set("refresh:" + refreshToken, admin.getId(), 7, TimeUnit.DAYS);
+        redisTemplate.opsForSet().add("refreshTokens:" + admin.getId(), refreshToken);
+        redisTemplate.expire("refreshTokens:" + admin.getId(), 7, TimeUnit.DAYS);
 
         LoginResponse response = new LoginResponse(accessToken);
         return new LoginResult(response, refreshToken);
@@ -70,19 +71,28 @@ public class AdminAuthService {
             throw new BaseException(ErrorEnum.ADMIN_ALREADY_DELETED);
         }
 
+        redisTemplate.opsForSet().remove("refreshTokens:" + userId, refreshToken);
+
         String newRefreshToken = UUID.randomUUID().toString();
         redisTemplate.opsForValue().set("refresh:" + newRefreshToken, userId, 7, TimeUnit.DAYS);
+        redisTemplate.opsForSet().add("refreshTokens:" + userId, newRefreshToken);
+        redisTemplate.expire("refreshTokens:" + userId, 7, TimeUnit.DAYS);
 
-        String newAccessToken = jwtProvider.generateToken(userId, UserRole.ADMIN);
+        String newAccessToken = jwtProvider.generateToken(userId, admin.getRole());
         return new LoginResult(new LoginResponse(newAccessToken), newRefreshToken);
     }
 
-    public void logout(String accessToken, String refreshToken) {
+    public void logout(String accessToken) {
+        Long userId = jwtProvider.getUserId(accessToken);
+        Set<Object> tokens = redisTemplate.opsForSet().members("refreshTokens:" + userId);
+        if (tokens != null) {
+            tokens.forEach(token -> redisTemplate.delete("refresh:" + token));
+            redisTemplate.delete("refreshTokens:" + userId);
+        }
         long remaining = jwtProvider.getRemainingExpiration(accessToken);
         if (remaining > 0) {
             redisTemplate.opsForValue()
                     .set("blacklist:" + accessToken, "logout", remaining, TimeUnit.MILLISECONDS);
         }
-        redisTemplate.delete("refresh:" + refreshToken);
     }
 }

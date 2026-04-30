@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -43,6 +44,9 @@ public class AdminSellerControllerTest {
 
     @MockitoBean
     private AdminSellerService adminSellerService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @BeforeEach
     void setUp() {

@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(SellerMeController.class)
 @AutoConfigureRestTestClient
@@ -38,6 +39,9 @@ public class SellerMeControllerTest {
 
     @MockitoBean
     private SellerMeService sellerMeService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     // SecurityUtils가 (Long) authentication.getPrincipal()로 캐스팅하므로
     // principal을 반드시 Long 타입으로 설정해야 합니다.

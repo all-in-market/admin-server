@@ -3,12 +3,14 @@ package com.example.allinmarket.admin.refund.controller;
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
+import com.example.allinmarket.common.config.TestRedisConfig;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
 import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(TestRedisConfig.class)
 class AdminRefundOptimisticLockControllerTest {
 
     private static final UsernamePasswordAuthenticationToken ADMIN_AUTH =

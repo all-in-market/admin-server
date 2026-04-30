@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(SellerProductController.class)
 @AutoConfigureRestTestClient
@@ -39,6 +40,9 @@ public class SellerProductControllerTest {
 
     @MockitoBean
     private SellerProductService sellerProductService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 판매자_상품_등록_성공_테스트() {

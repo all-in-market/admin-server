@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(SellerDashBoardController.class)
 @AutoConfigureRestTestClient
@@ -33,6 +34,9 @@ public class SellerDashBoardControllerTest {
 
     @MockitoBean
     private SellerDashboardService sellerDashboardService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     private void setAuthContext(Long userId) {
         UsernamePasswordAuthenticationToken auth =

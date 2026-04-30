@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(SellerOrderItemController.class)
 @AutoConfigureRestTestClient
@@ -33,6 +34,9 @@ public class SellerOrderItemControllerTest {
 
     @MockitoBean
     private SellerOrderItemService sellerOrderItemService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     private void setAuth() {
         UsernamePasswordAuthenticationToken auth =

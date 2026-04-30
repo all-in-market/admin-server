@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -47,6 +48,9 @@ public class AdminAuthServiceTest {
     @Mock
     private ValueOperations<String, Object> valueOps;
 
+    @Mock
+    private SetOperations<String, Object> setOps;
+
     @Test
     void 로그인_성공_테스트() {
         // given
@@ -68,6 +72,7 @@ public class AdminAuthServiceTest {
         given(passwordEncoder.matches("12345678", "비밀번호암호화")).willReturn(true);
         given(jwtProvider.generateToken(admin.getId(), admin.getRole())).willReturn("test-accessToken");
         given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(redisTemplate.opsForSet()).willReturn(setOps);
 
         // when
         LoginResult result = adminAuthService.login(request);
@@ -144,6 +149,7 @@ public class AdminAuthServiceTest {
         given(valueOps.getAndDelete("refresh:" + oldRefreshToken)).willReturn(userId);
         given(adminRepository.findById(userId)).willReturn(Optional.of(admin));
         given(jwtProvider.generateToken(userId, UserRole.ADMIN)).willReturn("new-accessToken");
+        given(redisTemplate.opsForSet()).willReturn(setOps);
 
         // when
         LoginResult result = adminAuthService.refresh(oldRefreshToken);
@@ -176,12 +182,12 @@ public class AdminAuthServiceTest {
 
         given(jwtProvider.getRemainingExpiration(accessToken)).willReturn(remaining);
         given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(redisTemplate.opsForSet()).willReturn(setOps);
 
         // when
-        adminAuthService.logout(accessToken, refreshToken);
+        adminAuthService.logout(accessToken);
 
         // then
         verify(valueOps).set("blacklist:" + accessToken, "logout", remaining, TimeUnit.MILLISECONDS);
-        verify(redisTemplate).delete("refresh:" + refreshToken);
     }
 }

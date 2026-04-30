@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(BuyerAuthController.class)
 @AutoConfigureRestTestClient
@@ -30,6 +31,9 @@ public class BuyerAuthControllerTest {
 
     @MockitoBean
     private BuyerAuthService buyerAuthService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 회원_가입_성공_테스트() {
