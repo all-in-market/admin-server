@@ -33,5 +33,11 @@ admin:
   email: ${ADMIN_ID}
   password: ${ADMIN_PASSWORD}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
 server:
   port: 8081
