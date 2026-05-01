@@ -182,7 +182,7 @@ class AdminOrderServiceTest {
         given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
 
         // when
-        OrderDetailResponse result = adminOrderService.updateStaus(adminId, orderId, request);
+        OrderDetailResponse result = adminOrderService.updateStatus(adminId, orderId, request);
 
         // then
         assertNotNull(result);
@@ -202,7 +202,7 @@ class AdminOrderServiceTest {
         // when & then
         BaseException exception = assertThrows(
                 BaseException.class,
-                () -> adminOrderService.updateStaus(adminId, orderId, request)
+                () -> adminOrderService.updateStatus(adminId, orderId, request)
         );
         assertEquals(ErrorEnum.ADMIN_NOT_FOUND, exception.getErrorEnum());
     }
@@ -222,7 +222,7 @@ class AdminOrderServiceTest {
         // when & then
         BaseException exception = assertThrows(
                 BaseException.class,
-                () -> adminOrderService.updateStaus(adminId, orderId, request)
+                () -> adminOrderService.updateStatus(adminId, orderId, request)
         );
         assertEquals(ErrorEnum.ORDER_NOT_FOUND, exception.getErrorEnum());
     }
@@ -246,7 +246,7 @@ class AdminOrderServiceTest {
         // when & then
         BaseException exception = assertThrows(
                 BaseException.class,
-                () -> adminOrderService.updateStaus(adminId, orderId, request)
+                () -> adminOrderService.updateStatus(adminId, orderId, request)
         );
         assertEquals(ErrorEnum.ORDER_STATUS_IMMUTABLE, exception.getErrorEnum());
     }
