@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM --platform=linux/amd64 eclipse-temurin:21-jdk-jammy AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 
 COPY gradlew .
@@ -14,12 +14,12 @@ COPY src src
 RUN ./gradlew bootJar --no-daemon
 
 # Stage 2: Run
-FROM --platform=linux/amd64 eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 LABEL authors="all-in-market"
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 8081
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
