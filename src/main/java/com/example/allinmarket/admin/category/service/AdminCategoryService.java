@@ -11,6 +11,7 @@ import com.example.allinmarket.domain.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -56,8 +57,13 @@ public class AdminCategoryService {
         Category category = categoryRepository.findByIdAndDeletedAtIsNull(categoryId)
                 .orElseThrow(() -> new BaseException(ErrorEnum.CATEGORY_NOT_FOUND));
 
-        category.updateName(request.name());
-        category.updateSortOrder(request.sortOrder());
+        if (StringUtils.hasText(request.name())) {
+            category.updateName(request.name());
+        }
+
+        if (request.sortOrder() != null) {
+            category.updateSortOrder(request.sortOrder());
+        }
 
         return CategoryDetailResponse.from(category);
     }

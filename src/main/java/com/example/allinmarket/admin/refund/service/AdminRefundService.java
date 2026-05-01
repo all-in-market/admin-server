@@ -75,7 +75,15 @@ public class AdminRefundService {
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
-        // 외부 API - 환불 요청 refund.getPayment.getImpUid();
+        // 외부 API - 포트원으로부터 결제 이력 조회
+
+        // 환불 멱등성 처리 + 환불 가능한지 여부 확인
+
+        // 외부 API - paymentId 기준으로 포트원 전액 환불 요청
+
+        // 외부 API - 포트원으로부터 결제 내역 재조회
+
+        // 재조회한 내용을 바탕으로 환불이 제대로 됐는지 확인 후 환불 상태 db에 반영
 
         refund.complete();
         // TransactionHistory에 refund.complete() 내역 추가

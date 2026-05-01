@@ -36,6 +36,6 @@ public class AdminOrderController {
             @Valid @RequestBody AdminOrderUpdateStatusRequest request
     ) {
         Long adminId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.UPDATE_SUCCESS, adminOrderService.updateStaus(adminId, orderId, request)));
+        return ResponseEntity.ok(ApiResponse.success(SuccessEnum.UPDATE_SUCCESS, adminOrderService.updateStatus(adminId, orderId, request)));
     }
 }

@@ -139,7 +139,7 @@ class AdminOrderControllerTest {
                 "홍길동", "서울시 강남구"
         );
 
-        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
+        when(adminOrderService.updateStatus(any(Long.class), any(Long.class), any()))
                 .thenReturn(response);
 
         String requestBody = """
@@ -166,7 +166,7 @@ class AdminOrderControllerTest {
         // given
         setAuth();
 
-        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
+        when(adminOrderService.updateStatus(any(Long.class), any(Long.class), any()))
                 .thenThrow(new BaseException(ErrorEnum.ORDER_NOT_FOUND));
 
         String requestBody = """
@@ -188,7 +188,7 @@ class AdminOrderControllerTest {
         // given
         setAuth();
 
-        when(adminOrderService.updateStaus(any(Long.class), any(Long.class), any()))
+        when(adminOrderService.updateStatus(any(Long.class), any(Long.class), any()))
                 .thenThrow(new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE));
 
         String requestBody = """
