@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(BuyerCartController.class)
 @AutoConfigureRestTestClient
@@ -42,6 +43,9 @@ public class BuyerCartControllerTest {
 
     @MockitoBean
     private BuyerCartService buyerCartService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @BeforeEach
     void setUp() {

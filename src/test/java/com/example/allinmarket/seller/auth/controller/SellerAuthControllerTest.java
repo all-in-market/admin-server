@@ -22,6 +22,7 @@ import com.example.allinmarket.seller.auth.dto.response.SellerLoginResponse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(SellerAuthController.class)
 @AutoConfigureRestTestClient
@@ -35,6 +36,9 @@ public class SellerAuthControllerTest {
 
     @MockitoBean
     private SellerAuthService sellerAuthService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 판매자_회원가입_성공_테스트() {

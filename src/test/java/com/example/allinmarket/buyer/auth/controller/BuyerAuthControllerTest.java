@@ -3,7 +3,7 @@ package com.example.allinmarket.buyer.auth.controller;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerSignupRequest;
 import com.example.allinmarket.buyer.auth.dto.response.BuyerAuthResponse;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.buyer.auth.service.BuyerAuthService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.security.JwtProvider;
@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(BuyerAuthController.class)
 @AutoConfigureRestTestClient
@@ -30,6 +31,9 @@ public class BuyerAuthControllerTest {
 
     @MockitoBean
     private BuyerAuthService buyerAuthService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 회원_가입_성공_테스트() {
@@ -95,7 +99,7 @@ public class BuyerAuthControllerTest {
                 "12345678"
         );
 
-        BuyerLoginResponse response = new BuyerLoginResponse("test-accessToken");
+        LoginResponse response = new LoginResponse("test-accessToken");
 
         given(buyerAuthService.login(any(BuyerLoginRequest.class))).willReturn(response);
 

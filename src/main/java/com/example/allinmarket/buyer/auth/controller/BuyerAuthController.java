@@ -3,7 +3,7 @@ package com.example.allinmarket.buyer.auth.controller;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerSignupRequest;
 import com.example.allinmarket.buyer.auth.dto.response.BuyerAuthResponse;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.buyer.auth.service.BuyerAuthService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
@@ -30,8 +30,8 @@ public class BuyerAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<BuyerLoginResponse>> login(@Valid @RequestBody BuyerLoginRequest request) {
-        BuyerLoginResponse response = buyerAuthService.login(request);
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody BuyerLoginRequest request) {
+        LoginResponse response = buyerAuthService.login(request);
         String token = response.accessToken();
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + token)

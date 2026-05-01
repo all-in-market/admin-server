@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import org.springframework.data.redis.core.RedisTemplate;
 
 @WebMvcTest(BuyerCategoryController.class)
 @AutoConfigureRestTestClient
@@ -32,6 +33,9 @@ public class BuyerCategoryControllerTest {
 
     @MockitoBean
     private BuyerCategoryService buyerCategoryService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     void 카테고리_목록_조회_성공_테스트() {

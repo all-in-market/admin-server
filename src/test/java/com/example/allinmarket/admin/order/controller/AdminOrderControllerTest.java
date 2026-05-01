@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -37,6 +38,9 @@ class AdminOrderControllerTest {
 
     @MockitoBean
     private AdminOrderService adminOrderService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     private void setAuth() {
         UsernamePasswordAuthenticationToken auth =

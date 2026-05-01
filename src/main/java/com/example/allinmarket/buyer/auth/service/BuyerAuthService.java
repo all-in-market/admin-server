@@ -3,16 +3,14 @@ package com.example.allinmarket.buyer.auth.service;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerLoginRequest;
 import com.example.allinmarket.buyer.auth.dto.request.BuyerSignupRequest;
 import com.example.allinmarket.buyer.auth.dto.response.BuyerAuthResponse;
-import com.example.allinmarket.buyer.auth.dto.response.BuyerLoginResponse;
+import com.example.allinmarket.common.auth.dto.LoginResponse;
 import com.example.allinmarket.buyer.entity.Buyer;
 import com.example.allinmarket.buyer.repository.BuyerRepository;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.security.JwtProvider;
-import com.example.allinmarket.common.security.SecurityUtils;
 import com.example.allinmarket.domain.cart.entity.Cart;
 import com.example.allinmarket.domain.cart.repository.CartRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -50,7 +48,7 @@ public class BuyerAuthService {
         return BuyerAuthResponse.from(savedBuyer);
     }
 
-    public BuyerLoginResponse login(BuyerLoginRequest request) {
+    public LoginResponse login(BuyerLoginRequest request) {
         Buyer buyer = buyerRepository.findByEmail(request.email()).orElseThrow(
                 () -> new BaseException(ErrorEnum.BUYER_NOT_FOUND)
         );
@@ -65,6 +63,6 @@ public class BuyerAuthService {
 
         String token = jwtProvider.generateToken(buyer.getId(), buyer.getRole());
 
-        return new BuyerLoginResponse(token);
+        return new LoginResponse(token);
     }
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,9 @@ public class AdminCategoryControllerTest {
 
     @MockitoBean
     private AdminCategoryService adminCategoryService;
+
+    @MockitoBean
+    private RedisTemplate<String, Object> redisTemplate;
 
     // SecurityUtils가 (Long) authentication.getPrincipal()로 캐스팅하므로
     // principal을 반드시 Long 타입으로 설정해야 합니다.
