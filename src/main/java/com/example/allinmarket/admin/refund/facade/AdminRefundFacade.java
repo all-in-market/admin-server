@@ -4,6 +4,8 @@ import com.example.allinmarket.admin.refund.client.PaymentGateway;
 import com.example.allinmarket.admin.refund.client.PortOnePaymentResponse;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
+import com.example.allinmarket.common.enums.ErrorEnum;
+import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,10 @@ public class AdminRefundFacade {
         Refund refund = adminRefundService.getPendingRefundWithPayment(refundId);
         String impUid = refund.getPayment().getImpUid();
 
+        if (impUid == null) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
         // 외부 API - 포트원으로부터 결제 이력 조회
         PortOnePaymentResponse portOnePaymentResponse = paymentGateway.getPayment(impUid);
 
@@ -33,6 +39,7 @@ public class AdminRefundFacade {
 
         // 외부 API - impUid 기준으로 포트원 전액 환불 요청
         // refundId를 통한 멱등키를 생성하여 중복 취소 요청 방지 (포트원 V2 REST API 필요)
+        // portOnePaymentResponse.isCancelled()인 경우, 이미 포트원에서 환불이 취소되었는데 complete 단계에서 실패한 경우이므로 통과
         if (!portOnePaymentResponse.isCancelled()) {
             paymentGateway.cancelPayment(impUid, refundId);
         }

@@ -31,7 +31,7 @@ public class Payment extends ModifiableEntity {
     @Column(nullable = false, unique = true)
     private String merchantUid;
 
-    @Column
+    @Column(unique = true)
     private String impUid;
 
     @PositiveOrZero

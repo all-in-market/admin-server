@@ -104,20 +104,11 @@ public class AdminRefundService {
 
         refund.success();
 
-        try {
-            transactionHistoryService.saveRefundHistory(refund);
-        } catch (Exception e) {
-            log.error("환불 승인 이력 저장 실패: refundId = {}, reason = {}", refund.getId(), e.getMessage());
-        }
+        transactionHistoryService.saveRefundHistory(refund);
 
         // TransactionHistory에 payment.cancel() 내역 추가
         dbPayment.cancel();
-
-        try {
-            transactionHistoryService.savePaymentHistory(refund.getPayment());
-        } catch (Exception e) {
-            log.error("결제 취소 이력 저장 실패: paymentId = {}, reason = {}", dbPayment.getId(), e.getMessage());
-        }
+        transactionHistoryService.savePaymentHistory(refund.getPayment());
 
         // SellerDashboard에 주문 취소 내역 반영
         dbPayment.getOrder().updateStatus(OrderStatus.REFUNDED);
@@ -198,17 +189,9 @@ public class AdminRefundService {
     }
 
     public Refund getPendingRefundWithPayment(Long refundId) {
-        Refund refund = refundRepository.findByIdWithPayment(refundId).orElseThrow(
+
+        return refundRepository.findByIdWithPayment(refundId).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
-
-        if (refund.getStatus() != RefundStatus.PENDING) {
-            throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
-        }
-
-        return refund;
     }
-
-
-
 }
