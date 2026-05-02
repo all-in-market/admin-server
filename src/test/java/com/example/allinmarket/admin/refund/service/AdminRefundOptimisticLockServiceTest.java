@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,6 +107,7 @@ class AdminRefundOptimisticLockServiceTest {
             Refund refund = refundRepository.save(
                     Refund.of(buyer, payment, ReasonEnum.CHANGE_OF_MIND, "환불 사유")
             );
+
             return refund.getId();
         });
     }
@@ -120,6 +122,16 @@ class AdminRefundOptimisticLockServiceTest {
     }
 
     @Test
+    void startRefundProcessing_호출시_PENDING에서_PROCESSING으로_변경된다() {
+        // when
+        adminRefundService.startRefundProcessing(refundId);
+
+        // then
+        Refund refund = refundRepository.findById(refundId).orElseThrow();
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.PROCESSING);
+    }
+
+    @Test
     void complete_두_영속성컨텍스트_충돌시_OptimisticLockException_발생() {
         EntityManager em1 = emf.createEntityManager();
         EntityManager em2 = emf.createEntityManager();
@@ -131,24 +143,33 @@ class AdminRefundOptimisticLockServiceTest {
             em2.getTransaction().begin();
             Refund refundInEm2 = em2.find(Refund.class, refundId);
 
+            refundInEm1.processing();
             refundInEm1.success();
             refundInEm1.getPayment().cancel();
             refundInEm1.getPayment().getOrder().updateStatus(OrderStatus.REFUNDED);
             em1.getTransaction().commit();
 
+            refundInEm2.processing();
             refundInEm2.success();
 
             assertThatThrownBy(() -> em2.getTransaction().commit())
                     .isInstanceOf(RollbackException.class)
                     .hasRootCauseInstanceOf(StaleStateException.class);
         } finally {
-            if (em1.isOpen()) em1.close();
-            if (em2.isOpen()) em2.close();
+            if (em1.isOpen()) {
+                em1.close();
+            }
+            if (em2.isOpen()) {
+                em2.close();
+            }
         }
     }
 
     @Test
-    void complete_동시_요청시_하나만_성공하고_나머지는_예외또는멱등응답() throws InterruptedException {
+    void complete_동시_요청시_최종적으로_SUCCESS가_된다() throws InterruptedException {
+        // given: complete()는 PROCESSING 상태만 처리 가능하다.
+        adminRefundService.startRefundProcessing(refundId);
+
         int threadCount = 2;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -176,14 +197,17 @@ class AdminRefundOptimisticLockServiceTest {
         }
 
         startLatch.countDown();
-        doneLatch.await();
+        assertTrue(doneLatch.await(5, TimeUnit.SECONDS));
         executor.shutdown();
 
         assertThat(successCount.get() + failCount.get()).isEqualTo(threadCount);
         assertThat(successCount.get()).isGreaterThanOrEqualTo(1);
 
         Refund refund = refundRepository.findById(refundId).orElseThrow();
+        Payment payment = paymentRepository.findById(refund.getPayment().getId()).orElseThrow();
+
         assertThat(refund.getStatus()).isEqualTo(RefundStatus.SUCCESS);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
     }
 
     @Test
@@ -211,10 +235,11 @@ class AdminRefundOptimisticLockServiceTest {
         }
 
         startLatch.countDown();
-        doneLatch.await();
+        assertTrue(doneLatch.await(5, TimeUnit.SECONDS));
         executor.shutdown();
 
         assertThat(successCount.get() + failCount.get()).isEqualTo(threadCount);
+        assertThat(successCount.get()).isGreaterThanOrEqualTo(1);
 
         Refund refund = refundRepository.findById(refundId).orElseThrow();
         Payment payment = paymentRepository.findById(refund.getPayment().getId()).orElseThrow();
@@ -244,8 +269,12 @@ class AdminRefundOptimisticLockServiceTest {
                     .isInstanceOf(RollbackException.class)
                     .hasRootCauseInstanceOf(StaleStateException.class);
         } finally {
-            if (em1.isOpen()) em1.close();
-            if (em2.isOpen()) em2.close();
+            if (em1.isOpen()) {
+                em1.close();
+            }
+            if (em2.isOpen()) {
+                em2.close();
+            }
         }
     }
 
@@ -278,7 +307,7 @@ class AdminRefundOptimisticLockServiceTest {
         }
 
         startLatch.countDown();
-        doneLatch.await();
+        assertTrue(doneLatch.await(5, TimeUnit.SECONDS));
         executor.shutdown();
 
         assertThat(successCount.get()).isEqualTo(1);
@@ -287,6 +316,7 @@ class AdminRefundOptimisticLockServiceTest {
 
     @Test
     void complete_호출_후_version_증가_확인() {
+        adminRefundService.startRefundProcessing(refundId);
         Long versionBefore = refundRepository.findById(refundId).orElseThrow().getVersion();
 
         adminRefundService.complete(refundId, cancelledPaymentResponse());

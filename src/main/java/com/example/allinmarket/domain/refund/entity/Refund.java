@@ -89,4 +89,10 @@ public class Refund extends ModifiableEntity {
             this.deniedReason = deniedReason;
         }
     }
+
+    public void processing() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.PROCESSING)) {
+            this.status = RefundStatus.PROCESSING;
+        }
+    }
 }

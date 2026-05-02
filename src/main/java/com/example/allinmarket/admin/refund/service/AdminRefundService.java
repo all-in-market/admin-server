@@ -82,15 +82,14 @@ public class AdminRefundService {
             return AuthorizeRefundResponse.from(refund);
         }
 
-        if (refund.getStatus() != RefundStatus.PENDING) {
+        if (refund.getStatus() != RefundStatus.PROCESSING) {
             throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
         }
 
         Payment dbPayment = refund.getPayment();
 
         if (canceledPayment == null) {
-            refund.fail();
-            return AuthorizeRefundResponse.from(refund);
+            throw new BaseException(ErrorEnum.PAYMENT_GATEWAY_ERROR);
         }
 
         if (!dbPayment.getImpUid().equals(canceledPayment.id())) {
@@ -100,6 +99,12 @@ public class AdminRefundService {
         if (!canceledPayment.isCancelled()) {
             refund.fail();
             return AuthorizeRefundResponse.from(refund);
+        }
+
+        if (canceledPayment.amount() == null
+                || canceledPayment.amount().total() == null
+                || dbPayment.getAmount().compareTo(canceledPayment.amount().total()) != 0) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
         }
 
         refund.success();
@@ -129,7 +134,7 @@ public class AdminRefundService {
         }
 
         // 환불 요청 상태 검증
-        if (refund.getStatus() != RefundStatus.PENDING) {
+        if (refund.getStatus() != RefundStatus.PROCESSING) {
             throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
         }
 
@@ -188,10 +193,30 @@ public class AdminRefundService {
         }
     }
 
-    public Refund getPendingRefundWithPayment(Long refundId) {
+    @Transactional
+    public Refund startRefundProcessing(Long refundId) {
 
-        return refundRepository.findByIdWithPayment(refundId).orElseThrow(
+        Refund refund = refundRepository.findByIdWithPayment(refundId).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
+
+        if (refund.getStatus() != RefundStatus.PENDING && refund.getStatus() != RefundStatus.FAILED) {
+            throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
+        }
+
+        refund.processing();
+
+        return refund;
+    }
+
+    @Transactional
+    public void failProcessing(Long refundId) {
+        Refund refund = refundRepository.findById(refundId).orElseThrow(
+                () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
+        );
+
+        if (refund.getStatus() == RefundStatus.PROCESSING) {
+            refund.fail();
+        }
     }
 }
