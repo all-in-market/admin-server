@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional
 public class DashboardService {
 
     private final SellerDashboardRepository sellerDashboardRepository;

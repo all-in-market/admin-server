@@ -2,6 +2,7 @@ package com.example.allinmarket.admin.refund.controller;
 
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
+import com.example.allinmarket.admin.refund.facade.AdminRefundFacade;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
 import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
@@ -39,6 +40,9 @@ class AdminRefundControllerTest {
 
     @MockitoBean
     private AdminRefundService adminRefundService;
+
+    @MockitoBean
+    private AdminRefundFacade adminRefundFacade;
 
     @MockitoBean
     private RedisTemplate<String, Object> redisTemplate;
@@ -189,7 +193,7 @@ class AdminRefundControllerTest {
         // given
         setAuth();
 
-        when(adminRefundService.complete(any(Long.class), any(Long.class)))
+        when(adminRefundFacade.processRefund(any(Long.class), any(Long.class)))
                 .thenReturn(createRefundResponse(1L, RefundStatus.SUCCESS));
 
         // when & then
@@ -208,7 +212,7 @@ class AdminRefundControllerTest {
         // given
         setAuth();
 
-        when(adminRefundService.complete(any(Long.class), any(Long.class)))
+        when(adminRefundFacade.processRefund(any(Long.class), any(Long.class)))
                 .thenThrow(new BaseException(ErrorEnum.REFUND_NOT_FOUND));
 
         // when & then

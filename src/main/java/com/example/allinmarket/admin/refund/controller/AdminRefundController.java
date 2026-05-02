@@ -2,6 +2,7 @@ package com.example.allinmarket.admin.refund.controller;
 
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
+import com.example.allinmarket.admin.refund.facade.AdminRefundFacade;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
 import com.example.allinmarket.common.enums.SuccessEnum;
 import com.example.allinmarket.common.response.ApiResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminRefundController {
 
     private final AdminRefundService adminRefundService;
+    private final AdminRefundFacade adminRefundFacade;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<AuthorizeRefundResponse>>> findAll(
@@ -52,7 +54,7 @@ public class AdminRefundController {
         Long adminId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.success(
                 SuccessEnum.UPDATE_SUCCESS,
-                adminRefundService.complete(adminId, refundId)
+                adminRefundFacade.processRefund(adminId, refundId)
         ));
     }
 

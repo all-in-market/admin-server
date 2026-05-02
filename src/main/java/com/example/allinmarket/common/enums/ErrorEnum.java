@@ -52,6 +52,7 @@ public enum ErrorEnum {
     PAYMENT_ALREADY_REFUNDED(409, "이미 환불 처리된 결제입니다."),
     PAYMENT_FAILED(500, "결제 처리 중 오류가 발생했습니다."),
     PAYMENT_NOT_FOUND(404, "결제 내역이 없습니다."),
+    PAYMENT_GATEWAY_ERROR(502, "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
 
     // Refund
     REFUND_ALREADY_EXISTS(409, "이미 환불이 진행 중이거나 처리된 결제입니다."),
