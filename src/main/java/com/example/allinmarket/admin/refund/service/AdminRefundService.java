@@ -148,6 +148,10 @@ public class AdminRefundService {
             throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
         }
 
+        if (portOnePaymentResponse.amount() == null || portOnePaymentResponse.amount().total() == null) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
         if (!dbPayment.getImpUid().equals(portOnePaymentResponse.id())) {
             throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
         }

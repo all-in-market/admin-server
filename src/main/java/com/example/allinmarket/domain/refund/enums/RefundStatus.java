@@ -18,7 +18,7 @@ public enum RefundStatus {
             case NONE -> targetStatus == PENDING;
             case PENDING ->  targetStatus == PROCESSING || targetStatus == DENIED;
             case PROCESSING -> targetStatus == SUCCESS || targetStatus == FAILED;
-            case FAILED -> targetStatus == PENDING;
+            case FAILED -> targetStatus == PENDING || targetStatus == PROCESSING;
             case SUCCESS, DENIED -> false;
         };
     }
