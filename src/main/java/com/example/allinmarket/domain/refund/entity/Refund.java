@@ -64,6 +64,12 @@ public class Refund extends ModifiableEntity {
         return refund;
     }
 
+    public void pending() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.PENDING)) {
+            this.status = RefundStatus.PENDING;
+        }
+    }
+
     public void success() {
         if (this.status.refundCanTransitToTargetStatus(RefundStatus.SUCCESS)) {
             this.status = RefundStatus.SUCCESS;
@@ -71,10 +77,9 @@ public class Refund extends ModifiableEntity {
         }
     }
 
-    public void complete() {
-        if (this.status.refundCanTransitToTargetStatus(RefundStatus.SUCCESS)) {
-            this.status = RefundStatus.SUCCESS;
-            this.processedAt = LocalDateTime.now();
+    public void fail() {
+        if (this.status.refundCanTransitToTargetStatus(RefundStatus.FAILED)) {
+            this.status = RefundStatus.FAILED;
         }
     }
 
@@ -82,12 +87,6 @@ public class Refund extends ModifiableEntity {
         if (this.status.refundCanTransitToTargetStatus(RefundStatus.DENIED)) {
             this.status = RefundStatus.DENIED;
             this.deniedReason = deniedReason;
-        }
-    }
-
-    public void pending() {
-        if (this.status.refundCanTransitToTargetStatus(RefundStatus.PENDING)) {
-            this.status = RefundStatus.PENDING;
         }
     }
 }

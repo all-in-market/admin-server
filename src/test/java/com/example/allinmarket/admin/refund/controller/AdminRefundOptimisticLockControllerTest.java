@@ -2,6 +2,7 @@ package com.example.allinmarket.admin.refund.controller;
 
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
+import com.example.allinmarket.admin.refund.facade.AdminRefundFacade;
 import com.example.allinmarket.admin.refund.service.AdminRefundService;
 import com.example.allinmarket.common.config.TestRedisConfig;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
@@ -51,6 +52,8 @@ class AdminRefundOptimisticLockControllerTest {
     private MockMvc mockMvc;
     @MockitoBean
     private AdminRefundService adminRefundService;
+    @MockitoBean
+    private AdminRefundFacade adminRefundFacade;
 
     private AuthorizeRefundResponse successResponse(RefundStatus status) {
         return new AuthorizeRefundResponse(
@@ -65,7 +68,7 @@ class AdminRefundOptimisticLockControllerTest {
 
     @Test
     void complete_서비스_성공시_200OK_반환() throws Exception {
-        when(adminRefundService.complete(any(), any()))
+        when(adminRefundFacade.processRefund(any(), any()))
                 .thenReturn(successResponse(RefundStatus.SUCCESS));
 
         mockMvc.perform(put("/admin/refunds/1/complete")
@@ -74,19 +77,19 @@ class AdminRefundOptimisticLockControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.status").value("SUCCESS"));
 
-        verify(adminRefundService, times(1)).complete(any(), any());
+        verify(adminRefundFacade, times(1)).processRefund(any(), any());
     }
 
     @Test
     void complete_서비스_예외시_5xx_반환() throws Exception {
-        when(adminRefundService.complete(any(), any()))
+        when(adminRefundFacade.processRefund(any(), any()))
                 .thenThrow(new OptimisticLockingFailureException("락 충돌"));
 
         mockMvc.perform(put("/admin/refunds/1/complete")
                         .with(authentication(ADMIN_AUTH)))
                 .andExpect(status().is5xxServerError());
 
-        verify(adminRefundService, times(1)).complete(any(), any());
+        verify(adminRefundFacade, times(1)).processRefund(any(), any());
     }
 
     // ==================== deny ====================

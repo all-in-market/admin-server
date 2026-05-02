@@ -1,5 +1,6 @@
 package com.example.allinmarket.admin.refund.service;
 
+import com.example.allinmarket.admin.refund.client.PortOnePaymentResponse;
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.repository.AdminRepository;
@@ -7,6 +8,8 @@ import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.domain.order.enums.OrderStatus;
+import com.example.allinmarket.domain.payment.entity.Payment;
+import com.example.allinmarket.domain.payment.enums.PaymentStatus;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.RefundStatus;
 import com.example.allinmarket.domain.refund.repository.RefundRepository;
@@ -20,6 +23,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -67,52 +71,144 @@ public class AdminRefundService {
             backoff = @Backoff(delay = 100)
     )
     @Transactional
-    public AuthorizeRefundResponse complete(Long adminId, Long refundId) {
+    public AuthorizeRefundResponse complete(Long refundId, PortOnePaymentResponse canceledPayment) {
 
-        validationForbidden(adminId);
-
-        Refund refund = refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING).orElseThrow(
+        Refund refund = refundRepository.findByIdWithPaymentAndOrder(refundId).orElseThrow(
                 () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
         );
 
-        // 외부 API - 포트원으로부터 결제 이력 조회
+        // 멱등성 처리
+        if (refund.getStatus() == RefundStatus.SUCCESS) {
+            return AuthorizeRefundResponse.from(refund);
+        }
 
-        // 환불 멱등성 처리 + 환불 가능한지 여부 확인
+        if (refund.getStatus() != RefundStatus.PENDING) {
+            throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
+        }
 
-        // 외부 API - paymentId 기준으로 포트원 전액 환불 요청
+        Payment dbPayment = refund.getPayment();
 
-        // 외부 API - 포트원으로부터 결제 내역 재조회
+        if (canceledPayment == null) {
+            refund.fail();
+            return AuthorizeRefundResponse.from(refund);
+        }
 
-        // 재조회한 내용을 바탕으로 환불이 제대로 됐는지 확인 후 환불 상태 db에 반영
+        if (!dbPayment.getImpUid().equals(canceledPayment.id())) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
 
-        refund.complete();
-        // TransactionHistory에 refund.complete() 내역 추가
+        if (!canceledPayment.isCancelled()) {
+            refund.fail();
+            return AuthorizeRefundResponse.from(refund);
+        }
+
+        refund.success();
+
         try {
             transactionHistoryService.saveRefundHistory(refund);
-            log.info("환불 승인 이력 저장 성공: refundId = {}", refund.getId());
         } catch (Exception e) {
             log.error("환불 승인 이력 저장 실패: refundId = {}, reason = {}", refund.getId(), e.getMessage());
         }
 
-        refund.getPayment().cancel();
         // TransactionHistory에 payment.cancel() 내역 추가
+        dbPayment.cancel();
+
         try {
             transactionHistoryService.savePaymentHistory(refund.getPayment());
-            log.info("결제 취소 이력 저장 성공: paymentId = {}", refund.getPayment().getId());
         } catch (Exception e) {
-            log.error("결제 취소 이력 저장 실패: paymentId = {}, reason = {}", refund.getPayment().getId(), e.getMessage());
+            log.error("결제 취소 이력 저장 실패: paymentId = {}, reason = {}", dbPayment.getId(), e.getMessage());
         }
-        refund.getPayment().getOrder().updateStatus(OrderStatus.REFUNDED);
+
         // SellerDashboard에 주문 취소 내역 반영
-        dashboardService.updateSellerDashboardWithRefund(refund.getPayment().getOrder().getId());
+        dbPayment.getOrder().updateStatus(OrderStatus.REFUNDED);
+        dashboardService.updateSellerDashboardWithRefund(dbPayment.getOrder().getId());
 
         return AuthorizeRefundResponse.from(refund);
-
     }
 
-    private void validationForbidden(Long adminId) {
+    @Transactional
+    public AuthorizeRefundResponse checkPaymentRefundable(Refund refund, PortOnePaymentResponse portOnePaymentResponse) {
+
+        Payment dbPayment = refund.getPayment();
+
+        // DB 기준 이미 환불 완료된 경우 멱등 응답
+        AuthorizeRefundResponse idempotentRefundedResponse = handleAlreadyRefundedPayment(dbPayment);
+        if (idempotentRefundedResponse != null) {
+            return idempotentRefundedResponse;
+        }
+
+        // 환불 요청 상태 검증
+        if (refund.getStatus() != RefundStatus.PENDING) {
+            throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
+        }
+
+        // DB 결제 상태 검증
+        if (dbPayment.getStatus() == PaymentStatus.PENDING) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        // PG 응답 검증
+        if (portOnePaymentResponse == null) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        if (!dbPayment.getImpUid().equals(portOnePaymentResponse.id())) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        if (dbPayment.getAmount().compareTo(portOnePaymentResponse.amount().total()) != 0) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        // 이미 포트원에서 환불이 취소되었는데 complete 단계에서 실패한 경우 통과
+        if (portOnePaymentResponse.isCancelled()) {
+            return null;
+        }
+
+        // 아직 취소 전이면 결제는 완료 상태여야 함
+        if (!portOnePaymentResponse.isPaid()) {
+            throw new BaseException(ErrorEnum.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        return null;
+    }
+
+    /**
+     * 이미 환불 처리된 결제인지 멱등성 검사 (동일 결제 중복 환불 처리 방지)
+     * 이미 환불된 결제인 경우 예외 대신 성공 응답메세지 전송
+     */
+    private AuthorizeRefundResponse handleAlreadyRefundedPayment(Payment dbPayment) {
+        if (dbPayment.getStatus() == PaymentStatus.REFUNDED) {
+
+            Refund refund = refundRepository.findByPayment(dbPayment).orElseThrow(
+                    () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
+            );
+
+            return AuthorizeRefundResponse.from(refund);
+        }
+
+        return null;
+    }
+
+
+    public void validationForbidden(Long adminId) {
         if (!adminRepository.existsByIdAndDeletedAtIsNull(adminId)) {
             throw new BaseException(ErrorEnum.ADMIN_NOT_FOUND);
         }
     }
+
+    public Refund getPendingRefundWithPayment(Long refundId) {
+        Refund refund = refundRepository.findByIdWithPayment(refundId).orElseThrow(
+                () -> new BaseException(ErrorEnum.REFUND_NOT_FOUND)
+        );
+
+        if (refund.getStatus() != RefundStatus.PENDING) {
+            throw new BaseException(ErrorEnum.REFUND_NOT_FOUND);
+        }
+
+        return refund;
+    }
+
+
+
 }

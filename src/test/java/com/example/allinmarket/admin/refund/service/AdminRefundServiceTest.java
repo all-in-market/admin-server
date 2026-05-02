@@ -1,5 +1,6 @@
 package com.example.allinmarket.admin.refund.service;
 
+import com.example.allinmarket.admin.refund.client.PortOnePaymentResponse;
 import com.example.allinmarket.admin.refund.dto.request.DenyRefundRequest;
 import com.example.allinmarket.admin.refund.dto.response.AuthorizeRefundResponse;
 import com.example.allinmarket.admin.repository.AdminRepository;
@@ -10,6 +11,8 @@ import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.domain.order.entity.Order;
 import com.example.allinmarket.domain.order.enums.OrderStatus;
 import com.example.allinmarket.domain.payment.entity.Payment;
+import com.example.allinmarket.domain.payment.enums.MethodEnum;
+import com.example.allinmarket.domain.payment.enums.PaymentStatus;
 import com.example.allinmarket.domain.refund.entity.Refund;
 import com.example.allinmarket.domain.refund.enums.ReasonEnum;
 import com.example.allinmarket.domain.refund.enums.RefundStatus;
@@ -25,14 +28,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AdminRefundServiceTest {
@@ -51,6 +58,12 @@ class AdminRefundServiceTest {
 
     @InjectMocks
     private AdminRefundService adminRefundService;
+
+    private static final Long REFUND_ID = 1L;
+    private static final Long PAYMENT_ID = 10L;
+    private static final Long ORDER_ID = 100L;
+    private static final String IMP_UID = "imp_mock_123";
+    private static final BigDecimal AMOUNT = BigDecimal.valueOf(10000);
 
     private Refund createRefundMock(Long refundId) {
         Buyer buyer = mock(Buyer.class);
@@ -222,81 +235,225 @@ class AdminRefundServiceTest {
     }
 
     // ==================== 환불 승인 ====================
-
     @Test
-    void 관리자_환불승인_성공_테스트() {
+    void complete_취소된_PG응답이면_환불성공_결제환불_주문환불로_변경된다() {
         // given
-        Long adminId = 1L;
-        Long refundId = 1L;
+        Refund refund = createPendingRefund();
 
-        given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
 
-        Order order = mock(Order.class);
-        given(order.getId()).willReturn(1L);
-
-        Payment payment = mock(Payment.class);
-        given(payment.getId()).willReturn(1L);
-        given(payment.getOrder()).willReturn(order);
-
-        Buyer buyer = mock(Buyer.class);
-        given(buyer.getId()).willReturn(1L);
-
-        Refund refund = mock(Refund.class);
-        given(refund.getId()).willReturn(refundId);
-        given(refund.getBuyer()).willReturn(buyer);
-        given(refund.getPayment()).willReturn(payment);
-        given(refund.getReason()).willReturn(ReasonEnum.CHANGE_OF_MIND);
-        given(refund.getDescription()).willReturn("환불 사유");
-        given(refund.getDeniedReason()).willReturn(null);
-        given(refund.getStatus()).willReturn(RefundStatus.PENDING);
-        given(refund.getProcessedAt()).willReturn(null);
-
-        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
-                .willReturn(Optional.of(refund));
+        PortOnePaymentResponse canceledPayment = cancelledPaymentResponse(IMP_UID);
 
         // when
-        AuthorizeRefundResponse result = adminRefundService.complete(adminId, refundId);
+        AuthorizeRefundResponse response =
+                adminRefundService.complete(REFUND_ID, canceledPayment);
 
         // then
-        assertNotNull(result);
-        assertEquals(refundId, result.id());
-        verify(refund).complete();
-        verify(payment).cancel();
-        verify(order).updateStatus(OrderStatus.REFUNDED);
-        verify(dashboardService).updateSellerDashboardWithRefund(1L);
+        assertThat(response.status()).isEqualTo(RefundStatus.SUCCESS);
+
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.SUCCESS);
+        assertThat(refund.getProcessedAt()).isNotNull();
+
+        Payment payment = refund.getPayment();
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        assertThat(payment.getOrder().getStatus()).isEqualTo(OrderStatus.REFUNDED);
+
+        verify(transactionHistoryService).saveRefundHistory(refund);
+        verify(transactionHistoryService).savePaymentHistory(payment);
+        verify(dashboardService).updateSellerDashboardWithRefund(ORDER_ID);
     }
 
     @Test
-    void 관리자_환불승인_관리자없음_실패_테스트() {
+    void complete_canceledPayment가_null이면_환불실패로_변경된다() {
         // given
-        Long adminId = 999L;
-        Long refundId = 1L;
+        Refund refund = createPendingRefund();
 
-        given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(false);
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
 
-        // when & then
-        BaseException exception = assertThrows(
-                BaseException.class,
-                () -> adminRefundService.complete(adminId, refundId)
-        );
-        assertEquals(ErrorEnum.ADMIN_NOT_FOUND, exception.getErrorEnum());
+        // when
+        AuthorizeRefundResponse response =
+                adminRefundService.complete(REFUND_ID, null);
+
+        // then
+        assertThat(response.status()).isEqualTo(RefundStatus.FAILED);
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.FAILED);
+
+        assertThat(refund.getPayment().getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(refund.getPayment().getOrder().getStatus()).isEqualTo(OrderStatus.PAID);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
     }
 
     @Test
-    void 관리자_환불승인_환불없음_실패_테스트() {
+    void complete_PG응답이_CANCELLED가_아니면_환불실패로_변경된다() {
         // given
-        Long adminId = 1L;
-        Long refundId = 999L;
+        Refund refund = createPendingRefund();
 
-        given(adminRepository.existsByIdAndDeletedAtIsNull(adminId)).willReturn(true);
-        given(refundRepository.findByIdAndStatus(refundId, RefundStatus.PENDING))
-                .willReturn(Optional.empty());
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
+
+        PortOnePaymentResponse paidPayment = paidPaymentResponse(IMP_UID);
+
+        // when
+        AuthorizeRefundResponse response =
+                adminRefundService.complete(REFUND_ID, paidPayment);
+
+        // then
+        assertThat(response.status()).isEqualTo(RefundStatus.FAILED);
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.FAILED);
+
+        assertThat(refund.getPayment().getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(refund.getPayment().getOrder().getStatus()).isEqualTo(OrderStatus.PAID);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
+    }
+
+    @Test
+    void complete_PG응답의_impUid가_DB와_다르면_예외가_발생한다() {
+        // given
+        Refund refund = createPendingRefund();
+
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
+
+        PortOnePaymentResponse wrongPayment = cancelledPaymentResponse("wrong_imp_uid");
 
         // when & then
-        BaseException exception = assertThrows(
-                BaseException.class,
-                () -> adminRefundService.complete(adminId, refundId)
-        );
-        assertEquals(ErrorEnum.REFUND_NOT_FOUND, exception.getErrorEnum());
+        assertThatThrownBy(() -> adminRefundService.complete(REFUND_ID, wrongPayment))
+                .isInstanceOf(BaseException.class);
+
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.PENDING);
+        assertThat(refund.getPayment().getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+        assertThat(refund.getPayment().getOrder().getStatus()).isEqualTo(OrderStatus.PAID);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
     }
+
+    @Test
+    void complete_이미_SUCCESS인_환불이면_멱등하게_SUCCESS를_반환한다() {
+        // given
+        Refund refund = createPendingRefund();
+        refund.success();
+
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
+
+        // when
+        AuthorizeRefundResponse response =
+                adminRefundService.complete(REFUND_ID, null);
+
+        // then
+        assertThat(response.status()).isEqualTo(RefundStatus.SUCCESS);
+        assertThat(refund.getStatus()).isEqualTo(RefundStatus.SUCCESS);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
+    }
+
+    @Test
+    void complete_PENDING이_아닌_환불이면_예외가_발생한다() {
+        // given
+        Refund refund = createPendingRefund();
+        refund.deny("거절 사유");
+
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.of(refund));
+
+        // when & then
+        assertThatThrownBy(() -> adminRefundService.complete(REFUND_ID, cancelledPaymentResponse(IMP_UID)))
+                .isInstanceOf(BaseException.class);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
+    }
+
+    @Test
+    void complete_환불건이_없으면_예외가_발생한다() {
+        // given
+        when(refundRepository.findByIdWithPaymentAndOrder(REFUND_ID))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> adminRefundService.complete(REFUND_ID, cancelledPaymentResponse(IMP_UID)))
+                .isInstanceOf(BaseException.class);
+
+        verifyNoInteractions(transactionHistoryService);
+        verifyNoInteractions(dashboardService);
+    }
+
+    private Refund createPendingRefund() {
+        Buyer buyer = Buyer.of("buyer@test.com", "password", "구매자", "010-1234-5678");
+        ReflectionTestUtils.setField(buyer, "id", 1L);
+
+        Order order = Order.of(
+                buyer,
+                AMOUNT,
+                null,
+                "수령인",
+                "010-1234-5678",
+                "서울시"
+        );
+        ReflectionTestUtils.setField(order, "id", ORDER_ID);
+        order.updateStatus(OrderStatus.PAID);
+
+        Payment payment = Payment.of(order, "merchant_uid_123", AMOUNT, MethodEnum.MOCK);
+        ReflectionTestUtils.setField(payment, "id", PAYMENT_ID);
+        ReflectionTestUtils.setField(payment, "impUid", IMP_UID);
+        payment.success(LocalDateTime.now());
+
+        Refund refund = Refund.of(
+                buyer,
+                payment,
+                ReasonEnum.CHANGE_OF_MIND,
+                "환불 사유"
+        );
+        ReflectionTestUtils.setField(refund, "id", REFUND_ID);
+
+        return refund;
+    }
+
+    private PortOnePaymentResponse cancelledPaymentResponse(String impUid) {
+        return paymentResponse("CANCELLED", impUid);
+    }
+
+    private PortOnePaymentResponse paidPaymentResponse(String impUid) {
+        return paymentResponse("PAID", impUid);
+    }
+
+    private PortOnePaymentResponse paymentResponse(String status, String impUid) {
+        return new PortOnePaymentResponse(
+                status,
+                impUid,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                new PortOnePaymentResponse.Amount(
+                        AMOUNT,
+                        BigDecimal.ZERO,
+                        BigDecimal.ZERO,
+                        AMOUNT,
+                        BigDecimal.ZERO,
+                        AMOUNT,
+                        "CANCELLED".equals(status) ? AMOUNT : BigDecimal.ZERO,
+                        BigDecimal.ZERO
+                ),
+                "KRW",
+                null,
+                null,
+                null
+        );
+    }
+
 }
