@@ -58,7 +58,7 @@ public class OrderStatusUpdateEventListener {
             );
 
             restClient.post()
-                    .uri(notificationServerUrl + "/internal/notifications/order")
+                    .uri(notificationServerUrl + "/internal/notifications/orders")
                     .header("X-Client-Id", clientId)
                     .header("X-Timestamp", timestamp)
                     .header("X-Request-Id", requestId)
