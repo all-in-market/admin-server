@@ -1,4 +1,10 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
+  data:
+    redis:
+      repositories:
+        enabled: false
   sql:
     init:
       mode: never  # 테스트 시 SQL 초기화 스크립트 실행 안 함
