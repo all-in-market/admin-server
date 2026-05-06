@@ -45,7 +45,7 @@ public class OrderStatusUpdateEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderStatusUpdateEvent(OrderStatusUpdateEvent event) {
         try{
-            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.adminId(), event.orderId(), event.status());
+            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.orderId(), event.status());
 
             String body = objectMapper.writeValueAsString(request);
 
