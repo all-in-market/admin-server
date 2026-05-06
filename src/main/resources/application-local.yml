@@ -2,7 +2,7 @@ spring:
   data:
     redis:
       ssl:
-        enabled: true
+        enabled: false
 
 notification-server:
-  url: https://hyu1335.cloud
+  url: http://localhost:8083
