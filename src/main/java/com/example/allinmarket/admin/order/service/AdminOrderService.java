@@ -7,8 +7,10 @@ import com.example.allinmarket.common.enums.ErrorEnum;
 import com.example.allinmarket.common.exception.BaseException;
 import com.example.allinmarket.common.response.PageResponse;
 import com.example.allinmarket.domain.order.entity.Order;
+import com.example.allinmarket.domain.order.event.OrderStatusUpdateEvent;
 import com.example.allinmarket.domain.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final AdminRepository adminRepository;
+    private final ApplicationEventPublisher eventPublisher; // 배송 출발, 배송 도착 처리 시 이벤트 발행
 
     public PageResponse<OrderDetailResponse> findAll(Long adminId, Pageable pageable) {
 
@@ -41,6 +44,7 @@ public class AdminOrderService {
         );
 
         order.updateStatus(request.status());
+        eventPublisher.publishEvent(new OrderStatusUpdateEvent(adminId, orderId, request.status()));
 
         return OrderDetailResponse.from(order);
     }

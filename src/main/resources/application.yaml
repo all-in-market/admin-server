@@ -41,3 +41,8 @@ management:
 
 server:
   port: 8081
+
+notification:
+  auth:
+    client-id: ${CUSTOMER_SERVER}
+    secret: ${SERVER_SECRET_KEY}
