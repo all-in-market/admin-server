@@ -45,7 +45,7 @@ public class OrderStatusUpdateEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderStatusUpdateEvent(OrderStatusUpdateEvent event) {
         try{
-            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.orderId(), event.status());
+            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.buyerId(), event.orderId(), event.status());
 
             String body = objectMapper.writeValueAsString(request);
 
@@ -68,10 +68,10 @@ public class OrderStatusUpdateEventListener {
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientException e) {
-            log.error("주문 상태 변경 알림 전송 실패. adminId = {}, orderId={}, status = {}", event.adminId(), event.orderId(), event.status(), e);
+            log.error("주문 상태 변경 알림 전송 실패. buyerId = {}, orderId={}, status = {}", event.buyerId(), event.orderId(), event.status(), e);
             throw e;
         } catch (JsonProcessingException e) {
-            log.error("주문 상태 변경 이벤트 직렬화 실패. adminId = {}, orderId={}, status = {}", event.adminId(), event.orderId(), event.status(), e);
+            log.error("주문 상태 변경 이벤트 직렬화 실패. orderId={}, status = {}", event.orderId(), event.status(), e);
         }
     }
 }
