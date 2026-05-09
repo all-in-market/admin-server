@@ -72,6 +72,7 @@ public class OrderStatusUpdateEventListener {
             throw e;
         } catch (JsonProcessingException e) {
             log.error("주문 상태 변경 이벤트 직렬화 실패. orderId={}, status = {}", event.orderId(), event.status(), e);
+            throw new IllegalStateException("주문 상태 변경 이벤트 직렬화 실패", e);
         }
     }
 }
