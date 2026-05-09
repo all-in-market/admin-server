@@ -45,7 +45,7 @@ public class OrderStatusUpdateEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderStatusUpdateEvent(OrderStatusUpdateEvent event) {
         try{
-            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.adminId(), event.orderId(), event.status());
+            OrderStatusUpdateEventRequest request = new OrderStatusUpdateEventRequest(event.buyerId(), event.orderId(), event.status());
 
             String body = objectMapper.writeValueAsString(request);
 
@@ -58,7 +58,7 @@ public class OrderStatusUpdateEventListener {
             );
 
             restClient.post()
-                    .uri(notificationServerUrl + "/internal/notifications/order")
+                    .uri(notificationServerUrl + "/internal/notifications/orders")
                     .header("X-Client-Id", clientId)
                     .header("X-Timestamp", timestamp)
                     .header("X-Request-Id", requestId)
@@ -68,10 +68,11 @@ public class OrderStatusUpdateEventListener {
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientException e) {
-            log.error("주문 상태 변경 알림 전송 실패. adminId = {}, orderId={}, status = {}", event.adminId(), event.orderId(), event.status(), e);
+            log.error("주문 상태 변경 알림 전송 실패. buyerId = {}, orderId={}, status = {}", event.buyerId(), event.orderId(), event.status(), e);
             throw e;
         } catch (JsonProcessingException e) {
-            log.error("주문 상태 변경 이벤트 직렬화 실패. adminId = {}, orderId={}, status = {}", event.adminId(), event.orderId(), event.status(), e);
+            log.error("주문 상태 변경 이벤트 직렬화 실패. orderId={}, status = {}", event.orderId(), event.status(), e);
+            throw new IllegalStateException("주문 상태 변경 이벤트 직렬화 실패", e);
         }
     }
 }

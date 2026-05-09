@@ -39,12 +39,12 @@ public class AdminOrderService {
 
         validationForbidden(adminId);
 
-        Order order = orderRepository.findById(orderId).orElseThrow(
+        Order order = orderRepository.findByIdWithBuyer(orderId).orElseThrow(
                 () -> new BaseException(ErrorEnum.ORDER_NOT_FOUND)
         );
 
         order.updateStatus(request.status());
-        eventPublisher.publishEvent(new OrderStatusUpdateEvent(adminId, orderId, request.status()));
+        eventPublisher.publishEvent(new OrderStatusUpdateEvent(order.getBuyer().getId(), orderId, request.status()));
 
         return OrderDetailResponse.from(order);
     }

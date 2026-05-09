@@ -1,4 +1,10 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
+  data:
+    redis:
+      repositories:
+        enabled: false
   sql:
     init:
       mode: never  # 테스트 시 SQL 초기화 스크립트 실행 안 함
@@ -12,13 +18,10 @@ spring:
     hibernate:
       ddl-auto: create-drop  # 테스트 시작 시 테이블 생성, 종료 시 삭제
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect  # H2 DB에 맞는 방언 설정
     defer-datasource-initialization: false
 
 jwt:
-  secret: VtHcoEqCTwJ981b7wHL5yb57mwhlE8UjzYhFu3vd5M1 # 테스트 전용 고정값 사용
+  secret: T6+m5bxFPqbtBx/eFtnqEKoGGktPI0WNYzk5YBchIho=
   expiration: 86400000  # 토큰 만료 시간 (단위: ms, 86400000 = 24시간)
 
 app:

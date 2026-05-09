@@ -31,11 +31,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,8 +55,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestRedisConfig.class)
+@Testcontainers
 class AdminRefundOptimisticLockServiceTest {
 
+    private static final BigDecimal AMOUNT = BigDecimal.valueOf(10000);
+    @Container
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0.36")
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
     @Autowired
     private AdminRefundService adminRefundService;
 
@@ -80,12 +93,22 @@ class AdminRefundOptimisticLockServiceTest {
 
     private Long adminId;
     private Long refundId;
+    private String impUid;
 
-    private static final String IMP_UID = "mock-imp-uid";
-    private static final BigDecimal AMOUNT = BigDecimal.valueOf(10000);
+    @DynamicPropertySource
+    static void mysqlProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.username", mysql::getUsername);
+        registry.add("spring.datasource.password", mysql::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-only");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.MySQLDialect");
+    }
 
     @BeforeEach
     void setUp() {
+        impUid = "mock-imp-uid-" + UUID.randomUUID();
+
         Admin admin = adminRepository.save(Admin.of("admin@test.com", "password", "관리자"));
         adminId = admin.getId();
 
@@ -100,7 +123,7 @@ class AdminRefundOptimisticLockServiceTest {
             order.updateStatus(OrderStatus.PAID);
 
             Payment payment = Payment.of(order, "mock-merchant-uid", AMOUNT, MethodEnum.MOCK);
-            ReflectionTestUtils.setField(payment, "impUid", IMP_UID);
+            ReflectionTestUtils.setField(payment, "impUid", impUid);
             payment.success(LocalDateTime.now());
             paymentRepository.save(payment);
 
@@ -380,8 +403,8 @@ class AdminRefundOptimisticLockServiceTest {
     private PortOnePaymentResponse paymentResponse(String status) {
         return new PortOnePaymentResponse(
                 status,
-                IMP_UID,
-                "tx_" + IMP_UID,
+                impUid,
+                "tx_" + impUid,
                 "mock-merchant-uid",
                 "store_mock",
                 null,

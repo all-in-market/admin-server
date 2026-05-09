@@ -1,6 +1,5 @@
 package com.example.allinmarket.admin.order.service;
 
-import com.example.allinmarket.admin.entity.Admin;
 import com.example.allinmarket.admin.order.dto.request.AdminOrderUpdateStatusRequest;
 import com.example.allinmarket.admin.repository.AdminRepository;
 import com.example.allinmarket.buyer.entity.Buyer;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +37,9 @@ class AdminOrderServiceTest {
 
     @Mock
     private AdminRepository adminRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AdminOrderService adminOrderService;
@@ -179,7 +182,7 @@ class AdminOrderServiceTest {
         Order order = createOrderMock(orderId);
         AdminOrderUpdateStatusRequest request = new AdminOrderUpdateStatusRequest(OrderStatus.SHIPPED);
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
+        given(orderRepository.findByIdWithBuyer(orderId)).willReturn(Optional.of(order));
 
         // when
         OrderDetailResponse result = adminOrderService.updateStatus(adminId, orderId, request);
@@ -217,7 +220,7 @@ class AdminOrderServiceTest {
 
         AdminOrderUpdateStatusRequest request = new AdminOrderUpdateStatusRequest(OrderStatus.SHIPPED);
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.empty());
+        given(orderRepository.findByIdWithBuyer(orderId)).willReturn(Optional.empty());
 
         // when & then
         BaseException exception = assertThrows(
@@ -238,7 +241,7 @@ class AdminOrderServiceTest {
         Order order = mock(Order.class);
         AdminOrderUpdateStatusRequest request = new AdminOrderUpdateStatusRequest(OrderStatus.PAID);
 
-        given(orderRepository.findById(orderId)).willReturn(Optional.of(order));
+        given(orderRepository.findByIdWithBuyer(orderId)).willReturn(Optional.of(order));
 
         org.mockito.Mockito.doThrow(new BaseException(ErrorEnum.ORDER_STATUS_IMMUTABLE))
                 .when(order).updateStatus(OrderStatus.PAID);
