@@ -72,7 +72,7 @@ jobs:
       - name: 테스트 실행
         run: ./gradlew test
         env:
-          SPRING_REDIS_HOST: redis
+          SPRING_REDIS_HOST: localhost
           SPRING_REDIS_PORT: 6379
 
       - name: 테스트 결과 업로드
