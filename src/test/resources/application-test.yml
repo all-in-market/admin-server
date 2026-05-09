@@ -21,7 +21,7 @@ spring:
     defer-datasource-initialization: false
 
 jwt:
-  secret: test-only-jwt-secret-key-longer-than-32-bytes
+  secret: T6+m5bxFPqbtBx/eFtnqEKoGGktPI0WNYzk5YBchIho=
   expiration: 86400000  # 토큰 만료 시간 (단위: ms, 86400000 = 24시간)
 
 app:
