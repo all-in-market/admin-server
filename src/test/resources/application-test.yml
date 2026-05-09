@@ -21,7 +21,7 @@ spring:
     defer-datasource-initialization: false
 
 jwt:
-  secret: test-jwt-secret-key # 테스트 전용 고정값 사용
+  secret: test-only-jwt-secret-key-longer-than-32-bytes
   expiration: 86400000  # 토큰 만료 시간 (단위: ms, 86400000 = 24시간)
 
 app:
