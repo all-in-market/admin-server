@@ -18,13 +18,10 @@ spring:
     hibernate:
       ddl-auto: create-drop  # 테스트 시작 시 테이블 생성, 종료 시 삭제
     show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect  # H2 DB에 맞는 방언 설정
     defer-datasource-initialization: false
 
 jwt:
-  secret: VtHcoEqCTwJ981b7wHL5yb57mwhlE8UjzYhFu3vd5M1 # 테스트 전용 고정값 사용
+  secret: test-jwt-secret-key # 테스트 전용 고정값 사용
   expiration: 86400000  # 토큰 만료 시간 (단위: ms, 86400000 = 24시간)
 
 app:
