@@ -101,26 +101,22 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
+    
+    start([시작]) --> 
 
-    [*] --> NONE
+     |환불 요청| PENDING[환불 대기]
 
-    NONE --> PENDING : 환불 요청 생성
+    PENDING -->|관리자 승인 시작| PROCESSING[처리 중]
+    PENDING -->|관리자 거절| DENIED[거절]
 
-    PENDING --> PROCESSING : 관리자 승인 시작
+    PROCESSING -->|환불 성공| SUCCESS[성공]
+    PROCESSING -->|PG 실패 / 검증 실패| FAILED[실패]
 
-    PENDING --> DENIED : 관리자 거절
+    FAILED -->|재요청| PENDING
+    FAILED -->|재시도| PROCESSING
 
-    PROCESSING --> SUCCESS : 환불 성공
-
-    PROCESSING --> FAILED : PG 실패 / 검증 실패
-
-    FAILED --> PENDING : 재요청
-
-    FAILED --> PROCESSING : 재시도
-
-    SUCCESS --> [*]
-
-    DENIED --> [*]
+    SUCCESS --> finish([종료])
+    DENIED --> finish([종료])
 ```
 </details>
 
