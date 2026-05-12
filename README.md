@@ -28,8 +28,8 @@
 ---
 
 # 3. 🔄 서비스 플로우
-
-# 관리자 환불 승인 플로우
+<details>
+<summary><h2>관리자 환불 승인 플로우</h2></summary>
 
 ```mermaid
 sequenceDiagram
@@ -90,15 +90,17 @@ sequenceDiagram
         Facade-->>Admin: 환불 완료 응답
     end
 ```
+</details>
 
 <br>
 
 ---
 
-# 환불 상태 흐름
+<details>
+<summary><h2>환불 상태 흐름</h2></summary>
 
 ```mermaid
-stateDiagram-v2
+flowchart TD
 
     [*] --> NONE
 
@@ -120,12 +122,14 @@ stateDiagram-v2
 
     DENIED --> [*]
 ```
+</details>
 
 <br>
 
 ---
 
-# 결제 상태 흐름
+<details>
+<summary><h2>결제 상태 흐름</h2></summary>
 
 ```mermaid
 stateDiagram-v2
@@ -144,12 +148,14 @@ stateDiagram-v2
 
     REFUNDED --> [*]
 ```
+</details>
 
 <br>
 
 ---
 
-# 환불 멱등성 처리 플로우
+<details>
+<summary><h2>환불 멱등성 처리 플로우</h2></summary>
 
 ```mermaid
 flowchart TD
@@ -180,12 +186,14 @@ flowchart TD
 
     K -- NO --> M[환불 실패 처리]
 ```
+</details>
 
 <br>
 
 ---
 
-# PortOne 환불 멱등성 전략
+<details>
+<summary><h2>PortOne 환불 멱등성 전략</h2></summary>
 
 ```mermaid
 flowchart TD
@@ -202,12 +210,14 @@ flowchart TD
 
     E -- NO --> G[PortOne 환불 처리]
 ```
+</details>
 
 <br>
 
 ---
 
-# 환불 실패 복구 전략
+<details>
+<summary><h2>환불 실패 복구 전략</h2></summary>
 
 ```mermaid
 flowchart TD
@@ -226,12 +236,14 @@ flowchart TD
 
     C --> G[관리자 재시도 가능]
 ```
+</details>
 
 <br>
 
 ---
 
-# 관리자 환불 거절 플로우
+<details>
+<summary><h2>관리자 환불 거절 플로우</h2></summary>
 
 ```mermaid
 sequenceDiagram
@@ -260,12 +272,14 @@ sequenceDiagram
         Service-->>Admin: REFUND_NOT_FOUND
     end
 ```
+</details>
 
 <br>
 
 ---
 
-# Retry + 동시성 처리 전략
+<details>
+<summary><h2>Retry + 동시성 처리 전략</h2></summary>
 
 ```mermaid
 flowchart TD
@@ -282,6 +296,7 @@ flowchart TD
 
     B -- NO --> E
 ```
+</details>
 
 <br>
 
@@ -371,7 +386,7 @@ registry.add("spring.datasource.password", container::getPassword);
 ```yml
 # application-test.yml 예시
 jwt:
-  secret: VtHcoEqCTwJ981b7wHL5yb57mwhlE8UjzYhFu3vd5M1... # 32바이트 이상의 Base64 인코딩된 키
+  secret: REPLACE_WITH_TEST_SECRET_BASE64 # 32바이트 이상의 Base64 인코딩된 키
 ```
 
 ### 결과
